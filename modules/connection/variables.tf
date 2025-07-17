@@ -1,0 +1,127 @@
+variable "vpn_gateway_id" {
+  description = "ID of the VPN gateway"
+  type        = string
+}
+
+variable "vpn_gateway_connection_name" {
+  description = "Name of the VPN gateway connection."
+  type        = string
+}
+
+variable "preshared_key" {
+  description = "Required preshared key for the VPN gateway connection."
+  type        = string
+}
+
+variable "establish_mode" {
+  description = "Optional field to determine the IKE negotiation behavior for the VPN gateway connection. Use 'bidirectional' to allow both sides to initiate IKE negotiations and rekeying. Use 'peer_only' to restrict initiation and rekeying to the peer side."
+  type        = string
+  default     = "bidirectional"
+  validation {
+    condition     = contains(["bidirectional", "peer_only"], var.establish_mode)
+    error_message = "establish_mode must be either 'bidirectional' or 'peer_only'."
+  }
+}
+
+variable "enable_distribute_traffic" {
+  description = "Optional flag for route-based VPN gateway connections to control traffic distribution across active tunnels. When true, traffic is load-balanced otherwise, it flows through the tunnel with the lower public IP."
+  type        = bool
+  default     = false
+}
+
+variable "peer_config" {
+  description = "Optional configuration for the remote peer VPN gateway. Includes peer address/FQDN, IKE identity type, and optional identity value."
+  type = list(object({
+    address = optional(string)
+    fqdn    = optional(string)
+    ike_identity = list(object({
+      type  = string
+      value = optional(string)
+    }))
+  }))
+  default = []
+  validation {
+    condition = length(var.peer_config) == 0 || alltrue([
+      for peer in var.peer_config : alltrue([
+        for id in peer.ike_identity : contains(local.valid_ike_types, id.type)
+      ])
+    ])
+    error_message = "Each ike_identity 'type' must be one of: fqdn, hostname, ipv4_address, or key_id."
+  }
+}
+
+variable "local_config" {
+  description = "Optional configuration for local IKE identities. Each entry in the list represents a VPN gateway member in active-active mode, containing one or more IKE identities."
+  type = list(object({
+    ike_identities = list(object({
+      type  = string
+      value = optional(string)
+    }))
+  }))
+  default = []
+  validation {
+    condition = length(var.local_config) == 0 || alltrue([
+      for member in var.local_config : alltrue([
+        for id in member.ike_identities : contains(local.valid_ike_types, id.type)
+      ])
+    ])
+    error_message = "Each ike_identity 'type' must be one of: fqdn, hostname, ipv4_address, or key_id."
+  }
+}
+
+variable "is_admin_state_up" {
+  description = "Optional flag to control the administrative state of the VPN gateway connection. If set to false (default), the connection is shut down. Set to true to enable the connection."
+  type        = bool
+  default     = false
+}
+
+####################################################
+# Policies
+####################################################
+
+variable "ike_policy_id" {
+  description = "ID of the IKE policy to associate with the VPN gateway. Leave empty ('') or null to remove the existing policy."
+  type        = string
+  default     = ""
+  validation {
+    condition     = can(regex("^$|^[a-zA-Z0-9-]+$", var.ike_policy_id))
+    error_message = "ike_policy_id must be empty or a valid policy ID (alphanumeric with optional hyphens)."
+  }
+}
+
+variable "ipsec_policy_id" {
+  description = "ID of the IPsec policy to associate with the VPN gateway. Leave empty ('') or null to remove the existing policy."
+  type        = string
+  default     = ""
+  validation {
+    condition     = can(regex("^$|^[a-zA-Z0-9-]+$", var.ipsec_policy_id))
+    error_message = "ipsec_policy_id must be empty or a valid policy ID (alphanumeric with optional hyphens)."
+  }
+}
+
+####################################################
+# DPD (Dead Peer Detection)
+####################################################
+
+variable "dpd_action" {
+  description = "Optional action to perform when the peer is unresponsive. Possible values are - 'restart', 'clear', 'hold', or 'none'."
+  type        = string
+  default     = "restart"
+
+  validation {
+    condition     = contains(["restart", "clear", "hold", "none"], var.dpd_action)
+    error_message = "Please provide the correct dpd action value. Allowed values are - 'restart', 'clear', 'hold', or 'none'"
+  }
+}
+
+variable "dpd_check_interval" {
+  description = "Optional interval in seconds between dead peer detection checks for peer responsiveness."
+  type        = number
+  default     = 2
+}
+
+variable "dpd_max_timeout" {
+  description = "Optional time in seconds to wait before considering the peer unreachable."
+  type        = number
+  default     = 10
+}
