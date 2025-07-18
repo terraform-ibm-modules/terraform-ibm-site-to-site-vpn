@@ -43,7 +43,8 @@ variable "peer_config" {
   validation {
     condition = length(var.peer_config) == 0 || alltrue([
       for peer in var.peer_config : alltrue([
-        for id in peer.ike_identity : contains(local.valid_ike_types, id.type)
+        for id in peer.ike_identity : contains(["fqdn", "hostname",
+        "ipv4_address", "key_id"], id.type)
       ])
     ])
     error_message = "Each ike_identity 'type' must be one of: fqdn, hostname, ipv4_address, or key_id."
@@ -62,7 +63,8 @@ variable "local_config" {
   validation {
     condition = length(var.local_config) == 0 || alltrue([
       for member in var.local_config : alltrue([
-        for id in member.ike_identities : contains(local.valid_ike_types, id.type)
+        for id in member.ike_identities : contains(["fqdn", "hostname",
+        "ipv4_address", "key_id"], id.type)
       ])
     ])
     error_message = "Each ike_identity 'type' must be one of: fqdn, hostname, ipv4_address, or key_id."
@@ -125,3 +127,5 @@ variable "dpd_max_timeout" {
   type        = number
   default     = 10
 }
+
+########################################################################################################
