@@ -4,10 +4,10 @@ This submodule can be used to create a **VPN Gateway Connection** between a VPN 
 
 ## Features
 
-- Attach your connection to an existing VPN gateway  
-- Optional custom **IKE and IPsec policies**  
-- Configurable **Dead Peer Detection (DPD)** parameters  
-- Support for **local and peer IKE identities** (FQDN, IP, base64 key ID)  
+- Attach your connection to an existing VPN gateway
+- Optional custom **IKE and IPsec policies**
+- Configurable **Dead Peer Detection (DPD)** parameters
+- Support for **local and peer IKE identities** (FQDN, IP, base64 key ID)
 - Control **establish_mode** (`bidirectional` or `peer_only`) and optional `distribute_traffic` for route-based VPNs
 
 ## Example Usage

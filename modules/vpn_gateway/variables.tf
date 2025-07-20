@@ -7,19 +7,6 @@ variable "resource_group_id" {
   type        = string
 }
 
-variable "access_tags" {
-  type        = list(string)
-  description = "A list of access tags to apply to the VPN resources created by the module. For more information, see https://cloud.ibm.com/docs/account?topic=account-access-tags-tutorial."
-  default     = []
-
-  validation {
-    condition = alltrue([
-      for tag in var.access_tags : can(regex("[\\w\\-_\\.]+:[\\w\\-_\\.]+", tag)) && length(tag) <= 128
-    ])
-    error_message = "Tags must match the regular expression \"[\\w\\-_\\.]+:[\\w\\-_\\.]+\". For more information, see https://cloud.ibm.com/docs/account?topic=account-tag&interface=ui#limits."
-  }
-}
-
 variable "tags" {
   description = "List of Tags for the resource created"
   type        = list(string)
@@ -31,7 +18,7 @@ variable "tags" {
 ##############################################################################
 
 variable "vpn_gateway_name" {
-  description = "The user-defined name for the VPN gateway. If unspecified, the name will be a hyphenated list of randomly-selected words. Names must be unique within the VPC the VPN server is serving."
+  description = "Name of the VPN gateway."
   type        = string
 }
 

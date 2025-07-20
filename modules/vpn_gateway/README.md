@@ -4,9 +4,9 @@ This submodule can provision **VPN Gateway** in IBM Cloud VPC, attached to a spe
 
 ## Features
 
-- Attach a VPN gateway to a VPC and a specific subnet  
-- Supports route-based and policy-based modes  
-- Optional service-to-service IAM authorization policy for cross-account or securely scoped access  
+- Attach a VPN gateway to a VPC and a specific subnet
+- Supports route-based and policy-based modes
+- Optional service-to-service IAM authorization policy for cross-account or securely scoped access
 - Uses IBM platform naming rules and enforces VPC-specific limits (such as one route‑based gateway per zone per VPC)
 
 ## Example Usage
