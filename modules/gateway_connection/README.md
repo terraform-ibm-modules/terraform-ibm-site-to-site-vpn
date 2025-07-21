@@ -14,7 +14,7 @@ This submodule can be used to create a **VPN Gateway Connection** between a VPN 
 
 ```hcl
 module "vpn_gw_connection" {
-  source                        = "../modules/vpn_gateway_connection"
+  source                        = "../modules/gateway_connection"
   vpn_gateway_connection_name   = "vpn-conn-1"
   vpn_gateway                   = module.vpn_gateway.gateway_id
   preshared_key                 = var.preshared_key

@@ -5,7 +5,7 @@
 
 resource "ibm_is_ike_policy" "ike" {
   name                     = var.ike_policy_name
-  resource_group           = var.resource_group
+  resource_group           = var.resource_group_id
   ike_version              = var.ike_version
   encryption_algorithm     = var.ike_encryption_algorithm
   authentication_algorithm = var.ike_authentication_algorithm
@@ -19,7 +19,7 @@ resource "ibm_is_ike_policy" "ike" {
 
 resource "ibm_is_ipsec_policy" "ipsec" {
   name                     = var.ipsec_policy_name
-  resource_group           = var.resource_group
+  resource_group           = var.resource_group_id
   encryption_algorithm     = var.ipsec_encryption_algorithm
   authentication_algorithm = var.ipsec_authentication_algorithm
   pfs                      = var.ipsec_pfs

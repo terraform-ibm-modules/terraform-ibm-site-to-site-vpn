@@ -15,8 +15,8 @@ Use this module if your on-prem or third-party peer requires specific cryptograp
 
 ```hcl
 module "policies" {
-  source             = "../modules/vpn_policies"
-  resource_group     = "Default"
+  source             = "../modules/policies"
+  resource_group     = "rg123...." # Enter the resource group id
 
   # IKE Policy Configuration
   ike_policy_name         = "ike-policy-001"

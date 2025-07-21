@@ -2,12 +2,10 @@
 # Account variables
 ##############################################################################
 
-variable "resource_group" {
-  description = "The name of the resource group where you want to create the IKE or IPSec Policies."
+variable "resource_group_id" {
+  description = "The ID of the resource group to use where you want to create the VPN gateway."
   type        = string
-  default     = "Default"
 }
-
 variable "tags" {
   description = "List of Tags for the resource created"
   type        = list(string)
