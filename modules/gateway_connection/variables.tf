@@ -9,9 +9,26 @@ variable "vpn_gateway_connection_name" {
 }
 
 variable "preshared_key" {
-  description = "Required preshared key for the VPN gateway connection."
+  description = "Required to specify the authentication key of the VPN gateway for the network outside your VPC. [Learn More](https://cloud.ibm.com/docs/vpc?topic=vpc-vpn-create-gateway&interface=ui#planning-considerations-vpn)"
   type        = string
+  sensitive   = true
+
+  validation {
+    condition     = length(var.preshared_key) >= 6 && length(var.preshared_key) <= 128
+    error_message = "Preshared key must be 6–128 characters long."
+  }
+
+  validation {
+    condition     = !startswith(var.preshared_key, "0x") && !startswith(var.preshared_key, "0s")
+    error_message = "Preshared key should not begin with '0x' or '0s'."
+  }
+
+  validation {
+    condition     = can(regex("^[-+&!@#$%^*().,:a-zA-Z0-9]+$", var.preshared_key))
+    error_message = "Preshared key can only contain digits, letters (a-z, A-Z), and these special characters: - + & ! @ # $ % ^ * ( ) . , :"
+  }
 }
+
 
 variable "establish_mode" {
   description = "Optional field to determine the IKE negotiation behavior for the VPN gateway connection. Use 'bidirectional' to allow both sides to initiate IKE negotiations and rekeying. Use 'peer_only' to restrict initiation and rekeying to the peer side."

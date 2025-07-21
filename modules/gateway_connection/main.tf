@@ -4,8 +4,8 @@ resource "ibm_is_vpn_gateway_connection" "vpn_gw_conn" {
   vpn_gateway        = var.vpn_gateway_id
   preshared_key      = var.preshared_key
   establish_mode     = var.establish_mode
-  ike_policy         = var.ike_policy_id
-  ipsec_policy       = var.ipsec_policy_id
+  ike_policy         = var.ike_policy_id != "" ? var.ike_policy_id : null
+  ipsec_policy       = var.ipsec_policy_id != "" ? var.ipsec_policy_id : null
   distribute_traffic = var.enable_distribute_traffic
 
   dynamic "peer" {
