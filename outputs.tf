@@ -2,29 +2,47 @@
 # Outputs
 ########################################################################################################################
 
-#
-# Developer tips:
-#   - Below are some good practise sample outputs
-#   - They should be updated for outputs applicable to the module being added
-#   - Use variable validation when possible
-#
-
-output "account_id" {
-  description = "An alpha-numeric value identifying the account ID."
-  value       = ibm_resource_instance.cos_instance.account_id
+output "gateway_id" {
+  description = "ID of the created VPN gateway"
+  value       = module.vpn_gateway.vpn_gateway_id
 }
 
-output "guid" {
-  description = "The GUID of the resource instance."
-  value       = ibm_resource_instance.cos_instance.guid
+output "gateway_public_ip" {
+  description = "Public IP of the VPN gateway"
+  value       = module.vpn_gateway.vpn_gateway_primary_ip
 }
 
-output "id" {
-  description = "The unique identifier of the resource instance."
-  value       = ibm_resource_instance.cos_instance.id
+output "gateway_crn" {
+  description = "CRN of the site to site VPN gateway"
+  value       = module.vpn_gateway.vpn_gateway_crn
 }
 
-output "crn" {
-  description = "The CRN of the resource instance."
-  value       = ibm_resource_instance.cos_instance.crn
+output "connection_id" {
+  description = "ID of the VPN connection."
+  value       = module.vpn_connections.vpn_gateway_connection_id
+}
+
+output "connection_crn" {
+  description = "Cloud Resource Name (CRN) of the VPN gateway connection."
+  value       = module.vpn_connections.vpn_gateway_connection_crn
+}
+
+output "connection_status" {
+  description = "Status of the VPN connection"
+  value       = module.vpn_connections.vpn_gateway_connection_status
+}
+
+output "connection_establish_mode" {
+  description = "Establish mode confirmed by IBM Cloud"
+  value       = module.vpn_connections.vpn_gateway_connection_mode
+}
+
+output "ike_policy_id" {
+  description = "IKE policy ID created (if used)"
+  value       = module.ike_policies.ike_policy_id
+}
+
+output "ipsec_policy_id" {
+  description = "IPsec policy ID created (if used)"
+  value       = module.ipsec_policies.ipsec_policy_id
 }

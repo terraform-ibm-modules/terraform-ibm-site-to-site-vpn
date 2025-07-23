@@ -1,8 +1,8 @@
 ##############################################################################
-# Provider config
+# Outputs
 ##############################################################################
 
-provider "ibm" {
-  ibmcloud_api_key = var.ibmcloud_api_key
-  region           = var.region
+output "ike_policy_id" {
+  description = "ID of the created IKE policy resource."
+  value       = ibm_is_ike_policy.ike.id
 }
