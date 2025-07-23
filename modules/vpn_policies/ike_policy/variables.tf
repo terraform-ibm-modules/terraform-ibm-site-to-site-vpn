@@ -6,11 +6,6 @@ variable "resource_group_id" {
   description = "The ID of the resource group to use where you want to create the resources."
   type        = string
 }
-variable "tags" {
-  description = "List of Tags for the resource created"
-  type        = list(string)
-  default     = null
-}
 
 ##############################################################################
 # IKE Policy variables
