@@ -1,10 +1,14 @@
 #####################################################################################
 # Input Variables
 #####################################################################################
-variable "existing_resource_group_name" {
+variable "region" {
+  description = "The region to which to deploy the resources."
   type        = string
-  description = "The name of an existing resource group to provision the resources."
-  default     = "Default"
+}
+
+variable "resource_group_id" {
+  description = "The ID of the resource group to use where you want to create the VPN gateway."
+  type        = string
 }
 
 variable "tags" {
@@ -42,41 +46,6 @@ variable "vpn_gateways" {
 # VPN Connection variables
 ##############################################################################
 
-variable "vpn_connections" {
-  description = "List of VPN gateway connections to be created."
-  type = list(object({
-    vpn_gateway_connection_name = string
-    vpn_gateway_id              = string
-    preshared_key               = string
-    establish_mode              = string
-    enable_distribute_traffic   = optional(bool)
-    ike_policy_key_id           = string
-    ipsec_policy_key_id         = string
-    is_admin_state_up           = optional(bool)
-    peer_config = optional(list(object({
-      address = optional(string)
-      fqdn    = optional(string)
-      ike_identity = list(object({
-        type  = string
-        value = optional(string)
-      }))
-    })), [])
-    local_config = optional(list(object({
-      ike_identities = list(object({
-        type  = string
-        value = optional(string)
-      }))
-    })), [])
-    dpd_action         = optional(string)
-    dpd_check_interval = optional(number)
-    dpd_max_timeout    = optional(number)
-  }))
-}
-
-##############################################################################
-# Policies
-##############################################################################
-
 variable "use_existing_ike_policies" {
   description = "If true, use pre-created IKE policy IDs instead of creating new ones."
   type        = bool
@@ -89,52 +58,166 @@ variable "use_existing_ipsec_policies" {
   default     = false
 }
 
-variable "ike_policies" {
-  description = "List of IKE policies to create"
+variable "vpn_connections" {
+  description = "List of VPN gateway connections to be created."
   type = list(object({
-    name = string
-    # resource_group           = string
-    ike_version              = number
+    vpn_gateway_name            = optional(string)
+    ike_policy_name             = optional(string)
+    ipsec_policy_name           = optional(string)
+    vpn_gateway_connection_name = string
+    vpn_gateway_id              = optional(string)
+    preshared_key               = string
+    establish_mode              = optional(string, "bidirectional")
+    enable_distribute_traffic   = optional(bool, false)
+    ike_policy_id           = optional(string, null)
+    ipsec_policy_id         = optional(string, null)
+    is_admin_state_up           = optional(bool, false)
+    peer = optional(list(object({
+      address = optional(string)
+      fqdn    = optional(string)
+      ike_identity = list(object({
+        type  = string
+        value = optional(string)
+      }))
+    })), [])
+    local = optional(list(object({
+      ike_identities = list(object({
+        type  = string
+        value = optional(string)
+      }))
+    })), [])
+    dpd_action         = optional(string, "restart")
+    dpd_check_interval = optional(number, 2)
+    dpd_max_timeout    = optional(number, 10)
+  }))
+}
+
+# ##############################################################################
+# Policies
+# ##############################################################################
+
+variable "ike_policies" {
+  description = "List of IKE policies to be created."
+  type = list(object({
+    name                     = string
+    resource_group           = optional(string)
+    ike_version              = optional(number, 2)
+    key_lifetime             = optional(number, 28800)
     encryption_algorithm     = string
     authentication_algorithm = string
     dh_group                 = number
-    key_lifetime             = number
   }))
   default = []
 }
 
 variable "ipsec_policies" {
-  description = "List of IPSec policies to create"
+  description = "List of IPSec policies to be created."
   type = list(object({
-    name = string
-    # resource_group           = string
+    name                     = string
+    resource_group           = optional(string)
     encryption_algorithm     = string
     authentication_algorithm = string
     pfs                      = string
-    key_lifetime             = number
+    key_lifetime             = optional(number, 3600)
   }))
   default = []
 }
 
+# ##############################################################################
+# # VPN Routes Configuration
+# ##############################################################################
+variable "vpn_routes" {
+  description = "List of routes to create in the table. To be used only when enable_multiple_routes is set to true."
+  type = list(object({
+    name        = string
+    zone        = string
+    vpc_id      = string
+    destination = string
+    next_hop    = string
+    action      = optional(string, "delegate")
+    advertise   = optional(bool, false)
+    priority    = optional(number, 2)
+  }))
+  default = []
+
+  validation {
+    condition = alltrue([
+      for r in var.vpn_routes :
+      can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]+$", r.destination))
+    ])
+    error_message = "Each route's 'destination' must be a valid CIDR block."
+  }
+
+  validation {
+    condition = alltrue([
+      for r in var.vpn_routes :
+      contains(["deliver", "delegate", "delegate_vpc", "drop"], r.action)
+    ])
+    error_message = "Each route's 'action' must be one of: deliver, delegate, delegate_vpc or drop."
+  }
+
+  validation {
+    condition = alltrue([
+      for r in var.vpn_routes :
+      lookup(r, "priority", 2) >= 0 && lookup(r, "priority", 2) <= 4
+    ])
+    error_message = "Each route's 'priority' must be between 0 and 4."
+  }
+}
+
 ##############################################################################
-# VPN Routes Configuration
+# VPN Route Table
 ##############################################################################
 
-variable "vpn_routes_config" {
-  description = "Map of routing table configs for VPN routes."
-  type = map(object({
-    routing_table_name = string
-    route_table_ingress_config = optional(object({
-      route_direct_link_ingress     = optional(bool)
-      route_transit_gateway_ingress = optional(bool)
-      route_vpc_zone_ingress        = optional(bool)
-    }))
-    routes = list(object({
-      name        = string
-      zone        = string
-      destination = string
-      action      = string
-      next_hop    = string
-    }))
-  }))
+variable "create_route_table" {
+  description = "Whether to create a new route table. Ignored if existing_route_table_id is provided"
+  type        = bool
+  default     = true
+}
+variable "existing_route_table_id" {
+  description = "ID of existing route table to use. If not provided, a new route table will be created"
+  type        = string
+  default     = null
+}
+
+variable "routing_table_name" {
+  description = "Name of the routing table to create. Only needed when create_route_table is true. "
+  type        = string
+  default     = null
+}
+
+variable "advertise_routes_to" {
+  description = "Ingress sources to which routes in this table (with advertise enabled) should be advertised. Allowed values: direct_link, transit_gateway. Requires corresponding ingress flag to be true."
+  type        = list(string)
+  default     = []
+}
+
+variable "accept_routes_from_resource_type" {
+  description = "List of resource types allowed to create routes in this table. Example: 'vpn_gateway', 'vpn_server'."
+  type        = list(string)
+  default     = []
+}
+
+variable "route_direct_link_ingress" {
+  description = "If true, allows routing table to route traffic from Direct Link into the VPC."
+  type        = bool
+  default     = false
+}
+
+variable "route_transit_gateway_ingress" {
+  description = "If true, allows routing table to route traffic from Transit Gateway into the VPC."
+  type        = bool
+  default     = false
+}
+
+variable "route_vpc_zone_ingress" {
+  description = "If true, allows routing table to route traffic from other zones within the VPC."
+  type        = bool
+  default     = false
+}
+
+variable "route_internet_ingress" {
+  description = "If true, allows routing table to route traffic that originates from the Internet."
+  type        = bool
+  default     = false
 }

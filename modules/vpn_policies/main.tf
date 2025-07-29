@@ -1,4 +1,4 @@
-
+# VPN Policy Submodule for IBM Cloud Site-to-Site VPN
 locals {
 
   ike_policy = {

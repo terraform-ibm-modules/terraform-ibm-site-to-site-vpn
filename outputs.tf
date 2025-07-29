@@ -2,47 +2,21 @@
 # Outputs
 ########################################################################################################################
 
-output "gateway_id" {
-  description = "ID of the created VPN gateway"
-  value       = module.vpn_gateway.vpn_gateway_id
+output "ike_policies" {
+  description = "List of IKE Policies."
+  value       = module.vpn_policies.ike_policies
 }
 
-output "gateway_public_ip" {
-  description = "Public IP of the VPN gateway"
-  value       = module.vpn_gateway.vpn_gateway_primary_ip
+output "ipsec_policies" {
+  description = "List of IPSec Policies."
+  value       = module.vpn_policies.ipsec_policies
 }
 
-output "gateway_crn" {
-  description = "CRN of the site to site VPN gateway"
-  value       = module.vpn_gateway.vpn_gateway_crn
+output "vpn_gateways" {
+  description = "List of VPN gateways."
+  value       = [for gateway in module.vpn_gateway : gateway]
 }
-
-output "connection_id" {
-  description = "ID of the VPN connection."
-  value       = module.vpn_connections.vpn_gateway_connection_id
-}
-
-output "connection_crn" {
-  description = "Cloud Resource Name (CRN) of the VPN gateway connection."
-  value       = module.vpn_connections.vpn_gateway_connection_crn
-}
-
-output "connection_status" {
-  description = "Status of the VPN connection"
-  value       = module.vpn_connections.vpn_gateway_connection_status
-}
-
-output "connection_establish_mode" {
-  description = "Establish mode confirmed by IBM Cloud"
-  value       = module.vpn_connections.vpn_gateway_connection_mode
-}
-
-output "ike_policy_id" {
-  description = "IKE policy ID created (if used)"
-  value       = module.ike_policies.ike_policy_id
-}
-
-output "ipsec_policy_id" {
-  description = "IPsec policy ID created (if used)"
-  value       = module.ipsec_policies.ipsec_policy_id
+output "vpn_connections" {
+  description = "List of VPN connections."
+  value       = [for conn in module.vpn_connections : conn]
 }

@@ -1,15 +1,17 @@
+# VPN Gateway Connection Submodule for IBM Cloud Site-to-Site VPN
+
 resource "ibm_is_vpn_gateway_connection" "vpn_gw_conn" {
   name               = var.vpn_gateway_connection_name
   admin_state_up     = var.is_admin_state_up
   vpn_gateway        = var.vpn_gateway_id
   preshared_key      = var.preshared_key
   establish_mode     = var.establish_mode
-  ike_policy         = var.ike_policy_id != "" ? var.ike_policy_id : null
-  ipsec_policy       = var.ipsec_policy_id != "" ? var.ipsec_policy_id : null
+  ike_policy         = var.ike_policy_id
+  ipsec_policy       = var.ipsec_policy_id
   distribute_traffic = var.enable_distribute_traffic
 
   dynamic "peer" {
-    for_each = var.peer_config
+    for_each = var.peer
     content {
       address = lookup(peer.value, "address", null)
       fqdn    = lookup(peer.value, "fqdn", null)
@@ -24,7 +26,7 @@ resource "ibm_is_vpn_gateway_connection" "vpn_gw_conn" {
   }
 
   dynamic "local" {
-    for_each = var.local_config
+    for_each = var.local
     content {
       dynamic "ike_identities" {
         for_each = local.value.ike_identities

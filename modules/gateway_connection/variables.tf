@@ -46,7 +46,7 @@ variable "enable_distribute_traffic" {
   default     = false
 }
 
-variable "peer_config" {
+variable "peer" {
   description = "Optional configuration for the remote peer VPN gateway. Includes peer address/FQDN, IKE identity type, and optional identity value."
   type = list(object({
     address = optional(string)
@@ -58,17 +58,24 @@ variable "peer_config" {
   }))
   default = []
   validation {
-    condition = length(var.peer_config) == 0 || alltrue([
-      for peer in var.peer_config : alltrue([
+    condition = length(var.peer) == 0 || alltrue([
+      for peer in var.peer : alltrue([
         for id in peer.ike_identity : contains(["fqdn", "hostname",
         "ipv4_address", "key_id"], id.type)
       ])
     ])
     error_message = "Each ike_identity 'type' must be one of: fqdn, hostname, ipv4_address, or key_id."
   }
+
+  validation {
+    condition = length(var.peer) == 0 || alltrue([
+      for peer in var.peer : (peer.address != null && peer.address != "") || (peer.fqdn != null && peer.fqdn != "")
+    ])
+    error_message = "Each peer must have either 'address' or 'fqdn' specified."
+  }
 }
 
-variable "local_config" {
+variable "local" {
   description = "Optional configuration for local IKE identities. Each entry in the list represents a VPN gateway member in active-active mode, containing one or more IKE identities."
   type = list(object({
     ike_identities = list(object({
@@ -78,8 +85,8 @@ variable "local_config" {
   }))
   default = []
   validation {
-    condition = length(var.local_config) == 0 || alltrue([
-      for member in var.local_config : alltrue([
+    condition = length(var.local) == 0 || alltrue([
+      for member in var.local : alltrue([
         for id in member.ike_identities : contains(["fqdn", "hostname",
         "ipv4_address", "key_id"], id.type)
       ])
@@ -101,21 +108,13 @@ variable "is_admin_state_up" {
 variable "ike_policy_id" {
   description = "ID of the IKE policy to associate with the VPN gateway. Leave empty ('') or null to remove the existing policy."
   type        = string
-  default     = ""
-  validation {
-    condition     = can(regex("^$|^[a-zA-Z0-9-]+$", var.ike_policy_id))
-    error_message = "ike_policy_id must be empty or a valid policy ID (alphanumeric with optional hyphens)."
-  }
+  default     = null
 }
 
 variable "ipsec_policy_id" {
   description = "ID of the IPsec policy to associate with the VPN gateway. Leave empty ('') or null to remove the existing policy."
   type        = string
-  default     = ""
-  validation {
-    condition     = can(regex("^$|^[a-zA-Z0-9-]+$", var.ipsec_policy_id))
-    error_message = "ipsec_policy_id must be empty or a valid policy ID (alphanumeric with optional hyphens)."
-  }
+  default     = null
 }
 
 ####################################################

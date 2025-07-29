@@ -2,6 +2,11 @@
 # Outputs
 ##############################################################################
 
+output "vpn_gateway_name" {
+  description = "The name of the VPN gateway."
+  value       = ibm_is_vpn_gateway.vpn_gateway.name
+}
+
 output "vpn_gateway_id" {
   description = "ID of the VPN gateway."
   value       = ibm_is_vpn_gateway.vpn_gateway.id
