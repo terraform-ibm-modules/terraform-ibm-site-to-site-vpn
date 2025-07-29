@@ -1,38 +1,28 @@
-########################################################################################################################
-# Outputs
-########################################################################################################################
-
-#
-# Developer tips:
-#   - Include all relevant outputs from the modules being called in the example
-#
-
-output "account_id" {
-  description = "An alpha-numeric value identifying the account ID."
-  value       = module.cos.account_id
+output "vpc_id" {
+  description = "VPC ID"
+  value       = ibm_is_vpc.vpc.id
 }
 
-output "guid" {
-  description = "The GUID of the resource instance."
-  value       = module.cos.account_id
+output "subnet_id" {
+  description = "Subnet ID where VPN gateway is attached."
+  value       = ibm_is_subnet.subnet_zone_1.id
 }
 
-output "id" {
-  description = "The unique identifier of the resource instance."
-  value       = module.cos.id
+output "ike_policies" {
+  description = "IKE policies information"
+  value       = module.site_to_site_vpn.ike_policies
 }
 
-output "crn" {
-  description = "The CRN of the resource instance."
-  value       = module.cos.crn
+output "ipsec_policies" {
+  description = "IPSec policies information"
+  value       = module.site_to_site_vpn.ipsec_policies
+}
+output "vpn_gateways" {
+  description = "VPN gateways information."
+  value       = module.site_to_site_vpn.vpn_gateways
 }
 
-output "resource_group_name" {
-  description = "Resource group name."
-  value       = module.resource_group.resource_group_name
-}
-
-output "resource_group_id" {
-  description = "Resource group ID."
-  value       = module.resource_group.resource_group_id
+output "vpn_connections" {
+  description = "VPN connection information."
+  value       = module.site_to_site_vpn.vpn_connections
 }
