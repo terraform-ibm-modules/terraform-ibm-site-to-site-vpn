@@ -1,9 +1,11 @@
 # VPN Routing Submodule for IBM Cloud Site-to-Site VPN
 
-data "ibm_is_vpc_routing_table" "existing" {
-  count         = var.existing_route_table_id != null ? 1 : 0
-  vpc           = var.vpc_id
-  routing_table = var.existing_route_table_id
+locals {
+  route_table_id = var.existing_route_table_id != null ? var.existing_route_table_id : (
+    var.create_route_table ? ibm_is_vpc_routing_table.vpn_routing_table[0].id : null
+  )
+  # Combine existing and new routes
+  all_routes = concat(var.existing_routes, var.vpn_routes)
 }
 
 resource "ibm_is_vpc_routing_table" "vpn_routing_table" {
@@ -20,17 +22,8 @@ resource "ibm_is_vpc_routing_table" "vpn_routing_table" {
   route_internet_ingress           = var.route_internet_ingress
 }
 
-locals {
-
-  route_table_id = var.existing_route_table_id != null ? var.existing_route_table_id : (
-    var.create_route_table ? ibm_is_vpc_routing_table.vpn_routing_table[0].id : null
-  )
-  # Combine existing and new routes
-  all_routes = concat(var.existing_routes, var.vpn_routes)
-}
-
 resource "ibm_is_vpc_routing_table_route" "vpn_route" {
-  count         = length(local.all_routes)
+  count         = local.route_table_id != null ? length(local.all_routes) : 0
   vpc           = var.vpc_id
   routing_table = local.route_table_id
   name          = try(local.all_routes[count.index].name, "vpn-route-${count.index}")

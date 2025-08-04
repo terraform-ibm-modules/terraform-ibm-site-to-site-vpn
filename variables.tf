@@ -46,13 +46,13 @@ variable "vpn_gateways" {
 # VPN Connection variables
 ##############################################################################
 
-variable "use_existing_ike_policies" {
+variable "use_existing_ike_policy" {
   description = "If true, use pre-created IKE policy IDs instead of creating new ones."
   type        = bool
   default     = false
 }
 
-variable "use_existing_ipsec_policies" {
+variable "use_existing_ipsec_policy" {
   description = "If true, use pre-created IPSec policy IDs instead of creating new ones."
   type        = bool
   default     = false
@@ -62,15 +62,15 @@ variable "vpn_connections" {
   description = "List of VPN gateway connections to be created."
   type = list(object({
     vpn_gateway_name            = optional(string)
+    vpn_gateway_id              = optional(string)
     ike_policy_name             = optional(string)
     ipsec_policy_name           = optional(string)
+    ike_policy_id               = optional(string)
+    ipsec_policy_id             = optional(string)
     vpn_gateway_connection_name = string
-    vpn_gateway_id              = optional(string)
     preshared_key               = string
     establish_mode              = optional(string, "bidirectional")
     enable_distribute_traffic   = optional(bool, false)
-    ike_policy_id           = optional(string, null)
-    ipsec_policy_id         = optional(string, null)
     is_admin_state_up           = optional(bool, false)
     peer = optional(list(object({
       address = optional(string)
@@ -90,6 +90,30 @@ variable "vpn_connections" {
     dpd_check_interval = optional(number, 2)
     dpd_max_timeout    = optional(number, 10)
   }))
+
+  validation {
+    condition = alltrue([
+      for conn in var.vpn_connections :
+      var.use_existing_vpn_gateway ? conn.vpn_gateway_id != null : conn.vpn_gateway_name != null
+    ])
+    error_message = "When use_existing_vpn_gateway=true, vpn_gateway_id must be provided. When false, vpn_gateway_name must be provided."
+  }
+
+  validation {
+    condition = alltrue([
+      for conn in var.vpn_connections :
+      var.use_existing_ike_policy ? conn.ike_policy_id != null : true
+    ])
+    error_message = "When use_existing_ike_policy=true, ike_policy_id must be provided."
+  }
+
+  validation {
+    condition = alltrue([
+      for conn in var.vpn_connections :
+      var.use_existing_ipsec_policy ? conn.ipsec_policy_id != null : true
+    ])
+    error_message = "When use_existing_ipsec_policy=true, ipsec_policy_id must be provided."
+  }
 }
 
 # ##############################################################################
@@ -126,17 +150,19 @@ variable "ipsec_policies" {
 # ##############################################################################
 # # VPN Routes Configuration
 # ##############################################################################
+
 variable "vpn_routes" {
-  description = "List of routes to create in the table. To be used only when enable_multiple_routes is set to true."
+  description = "List of routes to create in the table."
   type = list(object({
-    name        = string
-    zone        = string
-    vpc_id      = string
-    destination = string
-    next_hop    = string
-    action      = optional(string, "delegate")
-    advertise   = optional(bool, false)
-    priority    = optional(number, 2)
+    name             = string
+    zone             = string
+    vpc_id           = string
+    destination      = string
+    next_hop         = string
+    vpn_gateway_name = optional(string)
+    action           = optional(string, "delegate")
+    advertise        = optional(bool, false)
+    priority         = optional(number, 2)
   }))
   default = []
 
@@ -163,6 +189,15 @@ variable "vpn_routes" {
     ])
     error_message = "Each route's 'priority' must be between 0 and 4."
   }
+
+  validation {
+    condition = alltrue([
+      for r in var.vpn_routes :
+      r.next_hop != null || r.vpn_gateway_name != null
+    ])
+    error_message = "Each route must specify either 'next_hop' or 'vpn_gateway_name'."
+  }
+
 }
 
 ##############################################################################

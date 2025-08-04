@@ -26,7 +26,6 @@ resource "ibm_is_subnet" "subnet_zone_1" {
   resource_group           = module.resource_group.resource_group_id
   zone                     = "${var.region}-1"
   total_ipv4_address_count = 256
-  public_gateway           = ibm_is_public_gateway.gateway.id
 }
 
 ########################################################################################################################

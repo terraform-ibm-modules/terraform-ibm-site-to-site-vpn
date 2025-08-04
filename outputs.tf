@@ -20,3 +20,15 @@ output "vpn_connections" {
   description = "List of VPN connections."
   value       = [for conn in module.vpn_connections : conn]
 }
+
+output "vpn_route_tables" {
+  description = "VPN routing tables created per VPC."
+  value = {
+    for vpc_id, routes in local.vpn_routes_map :
+    vpc_id => {
+      routing_table_id = module.vpn_routes[vpc_id].routing_table_id
+      routes_count     = module.vpn_routes[vpc_id].routes_count
+      created_routes   = module.vpn_routes[vpc_id].created_routes
+    }
+  }
+}
