@@ -23,14 +23,20 @@ resource "ibm_is_vpc_routing_table" "vpn_routing_table" {
 }
 
 resource "ibm_is_vpc_routing_table_route" "vpn_route" {
-  count         = local.route_table_id != null ? length(local.all_routes) : 0
+  depends_on = [ibm_is_vpc_routing_table.vpn_routing_table]
+  for_each = {
+    for idx, route in local.all_routes :
+    "${idx}-${route.name}" => route
+    if var.existing_route_table_id != null || var.create_route_table
+  }
+
   vpc           = var.vpc_id
-  routing_table = local.route_table_id
-  name          = try(local.all_routes[count.index].name, "vpn-route-${count.index}")
-  destination   = local.all_routes[count.index].destination
-  next_hop      = local.all_routes[count.index].next_hop
-  zone          = local.all_routes[count.index].zone
-  action        = try(local.all_routes[count.index].action, "deliver")
-  advertise     = try(local.all_routes[count.index].advertise, false)
-  priority      = try(local.all_routes[count.index].priority, 2)
+  routing_table = var.existing_route_table_id != null ? var.existing_route_table_id : ibm_is_vpc_routing_table.vpn_routing_table[0].id
+  name          = each.value.name
+  destination   = each.value.destination
+  next_hop      = each.value.next_hop
+  zone          = each.value.zone
+  action        = each.value.action
+  advertise     = each.value.advertise
+  priority      = each.value.priority
 }

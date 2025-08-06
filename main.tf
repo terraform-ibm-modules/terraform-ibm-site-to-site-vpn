@@ -2,12 +2,7 @@ locals {
   # Convert the vpn inputs from list to a map
   vpn_gateway_map     = { for gateway in var.vpn_gateways : gateway.name => gateway }
   vpn_connections_map = { for conn in var.vpn_connections : conn.vpn_gateway_connection_name => conn }
-  ike_policy_map      = { for ike_policy in var.ike_policies : ike_policy.name => ike_policy }
-  ipsec_policy_map    = { for ipsec_policy in var.ipsec_policies : ipsec_policy.name => ipsec_policy }
-
-  gateways_to_create = var.use_existing_vpn_gateway ? {} : local.vpn_gateway_map
-  # Group routes by VPC ID to create one routing table per VPC
-  vpn_routes_map = { for route in var.vpn_routes : route.vpc_id => route }
+  gateways_to_create  = var.use_existing_vpn_gateway ? {} : local.vpn_gateway_map
 }
 
 ##############################################################################
@@ -65,26 +60,30 @@ module "vpn_connections" {
 ##############################################################################
 # VPC Routing Table and VPN Routes
 ##############################################################################
-module "vpn_routes" {
-  source   = "./modules/vpn_routing"
-  for_each = local.vpn_routes_map
 
-  vpc_id                  = each.key
+module "vpn_routes" {
+  depends_on = [module.vpn_gateway, module.vpn_connections]
+  source     = "./modules/vpn_routing"
+  count      = length(var.vpn_routes) > 0 ? 1 : 0
+
+  vpc_id                  = var.vpn_routes[0].vpc_id # Use first route's VPC ID
   existing_route_table_id = var.existing_route_table_id
   create_route_table      = var.create_route_table
-  routing_table_name      = var.routing_table_name != null ? "${var.routing_table_name}-${each.key}" : null
+  routing_table_name      = var.routing_table_name != null ? var.routing_table_name : "vpn-routing-table"
 
   vpn_routes = [
-    for route in each.value : {
+    for route in var.vpn_routes : {
       name        = route.name
-      zone        = "${var.region}-${route.zone}"
+      zone        = route.zone
       destination = route.destination
       action      = route.action
       advertise   = route.advertise
       priority    = route.priority
-      next_hop    = route.next_hop != null ? route.next_hop : module.vpn_gateway[route.vpn_gateway_name].vpn_gateway_id
+      next_hop    = route.next_hop
     }
   ]
+  existing_routes = []
+
   # Routing table configuration
   accept_routes_from_resource_type = var.accept_routes_from_resource_type
   advertise_routes_to              = var.advertise_routes_to

@@ -10,7 +10,6 @@ resource "ibm_is_vpn_gateway" "vpn_gateway" {
   resource_group = var.resource_group_id
   subnet         = var.subnet_id
   tags           = var.tags
-
   timeouts {
     delete = "1h"
   }

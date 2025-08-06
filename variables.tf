@@ -1,10 +1,6 @@
 #####################################################################################
 # Input Variables
 #####################################################################################
-variable "region" {
-  description = "The region to which to deploy the resources."
-  type        = string
-}
 
 variable "resource_group_id" {
   description = "The ID of the resource group to use where you want to create the VPN gateway."
@@ -92,15 +88,15 @@ variable "vpn_connections" {
   }))
 
   validation {
-    condition = alltrue([
+    condition = length(var.vpn_connections) > 0 && alltrue([
       for conn in var.vpn_connections :
-      var.use_existing_vpn_gateway ? conn.vpn_gateway_id != null : conn.vpn_gateway_name != null
+      var.use_existing_vpn_gateway ? (conn.vpn_gateway_id != null && conn.vpn_gateway_id != "") : (conn.vpn_gateway_name != null && conn.vpn_gateway_name != "")
     ])
     error_message = "When use_existing_vpn_gateway=true, vpn_gateway_id must be provided. When false, vpn_gateway_name must be provided."
   }
 
   validation {
-    condition = alltrue([
+    condition = length(var.vpn_connections) > 0 && alltrue([
       for conn in var.vpn_connections :
       var.use_existing_ike_policy ? conn.ike_policy_id != null : true
     ])
@@ -108,7 +104,7 @@ variable "vpn_connections" {
   }
 
   validation {
-    condition = alltrue([
+    condition = length(var.vpn_connections) > 0 && alltrue([
       for conn in var.vpn_connections :
       var.use_existing_ipsec_policy ? conn.ipsec_policy_id != null : true
     ])
@@ -168,36 +164,35 @@ variable "vpn_routes" {
 
   validation {
     condition = alltrue([
-      for r in var.vpn_routes :
-      can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]+$", r.destination))
+      for route in var.vpn_routes :
+      can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]+$", route.destination))
     ])
     error_message = "Each route's 'destination' must be a valid CIDR block."
   }
 
   validation {
     condition = alltrue([
-      for r in var.vpn_routes :
-      contains(["deliver", "delegate", "delegate_vpc", "drop"], r.action)
+      for route in var.vpn_routes :
+      contains(["deliver", "delegate", "delegate_vpc", "drop"], route.action)
     ])
     error_message = "Each route's 'action' must be one of: deliver, delegate, delegate_vpc or drop."
   }
 
   validation {
     condition = alltrue([
-      for r in var.vpn_routes :
-      lookup(r, "priority", 2) >= 0 && lookup(r, "priority", 2) <= 4
+      for route in var.vpn_routes :
+      lookup(route, "priority", 2) >= 0 && lookup(route, "priority", 2) <= 4
     ])
     error_message = "Each route's 'priority' must be between 0 and 4."
   }
 
   validation {
     condition = alltrue([
-      for r in var.vpn_routes :
-      r.next_hop != null || r.vpn_gateway_name != null
+      for route in var.vpn_routes :
+      route.next_hop != null || route.vpn_gateway_name != null
     ])
     error_message = "Each route must specify either 'next_hop' or 'vpn_gateway_name'."
   }
-
 }
 
 ##############################################################################

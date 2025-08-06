@@ -106,7 +106,6 @@ locals {
 
 module "site_to_site_vpn" {
   source            = "../.."
-  region            = var.region
   resource_group_id = module.resource_group.resource_group_id
   ike_policies      = local.ike_policies
   ipsec_policies    = local.ipsec_policies

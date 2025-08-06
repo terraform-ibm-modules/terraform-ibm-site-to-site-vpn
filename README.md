@@ -18,6 +18,7 @@ This module automates the provisioning of a site-to-site VPN. For more informati
     * [vpn_policies](./modules/vpn_policies)
     * [vpn_routing](./modules/vpn_routing)
 * [Examples](./examples)
+    * [](./examples/advanced)
     * [](./examples/basic)
 * [Contributing](#contributing)
 <!-- END OVERVIEW HOOK -->
@@ -35,14 +36,80 @@ https://terraform-ibm-modules.github.io/documentation/#/implementation-guideline
 <!-- Replace this heading with the name of the root level module (the repo name) -->
 ## terraform-ibm-site-to-site-vpn
 
+This Terraform module provisions a complete Site‑to‑Site VPN solution on IBM Cloud VPC, including VPN gateways, connections, policies, routing, and (optional) route advertisement.
 
-## Additional Information
+For more information refer [here](https://cloud.ibm.com/docs/vpc?topic=vpc-using-vpn&interface=terraform)
 
-* IBM permits only one route‑based VPN gateway per zone per VPC and gateway names must be unique within the VPC
+## Key Components
+
+### VPN Gateway
+
+* Creates the VPN gateway instance in specified subnet.
+* Supports both policy-based and route-based VPN configurations.
+* High availability with multiple gateway members across zones.
+* Public IP address automatically assigned for external connectivity.
+
+### VPN Policies
+
+*IKE Policy :*
+
+* Internet Key Exchange policy for Phase 1 negotiation.
+* Configurable authentication algorithms (SHA-1, SHA-256, SHA-384, SHA-512).
+* Configurable encryption algorithms (AES-128, AES-192, AES-256, 3DES).
+* Configurable Diffie-Hellman groups (2, 5, 14, 15, 16, 17, 18, 19, 20, 21).
+* IKE version support (IKEv1, IKEv2).
+
+*IPSec Policy :*
+
+* Internet Protocol Security policy for Phase 2 negotiation.
+* Configurable authentication and encryption algorithms.
+* Perfect Forward Secrecy (PFS) support.
+* Use custom policy if default does not meet peer requirements.
+
+### VPN Connections
+
+* Establishes IPSec tunnels between local and peer gateways.
+* Supports multiple connections per gateway for redundancy.
+* Dead Peer Detection (DPD) configuration.
+* Local and peer subnet definitions.
+
+### Route Management
+
+* Custom routes in VPC routing tables for directing traffic through VPN tunnels.
+* Route advertisement capabilities for dynamic routing.
+* Integration with VPC routing tables.
+* Support for both static and dynamic routing.
+
+## Important Considerations
+
+### Network specific
+
+* VPC must be created and configured before deploying the VPN gateway.
+* Subnets must exist in the target zones where VPN gateways will be deployed.
+* Local and peer network CIDR blocks must not overlap.
+* Ensure proper network segmentation and IP address planning.
+* Verify that the peer VPN gateway supports IPSec protocols.
+
+### Security specific
+
+* Pre-shared key (PSK) must be configured and shared between both endpoints.
+* IKE and IPSec policies must be compatible between local and peer gateways.
+* Proper authentication methods must be established.
+* Security groups and NACLs must allow VPN traffic.
+
+Please refer [Planning considerations for VPN gateways](https://cloud.ibm.com/docs/vpc?topic=vpc-planning-considerations-vpn&interface=terraform) for more information.
+
+## Known Limitations
+
+* IBM permits **only one route‑based VPN gateway per zone per VPC.**
+* VPN gateway names must be unique within the VPC.
+* Gateway requires `/28` subnet and cannot share with other VPC.
+* If peer VPN gateway lacks a public IP, use **FQDN identity + DNS resolution** in VPC.
 * Peer address type is immutable — once set as FQDN or IP, it cannot be changed.
-* Route-based mode allows distribute_traffic = true to enable active‑active tunnels; policy‑based does not (: only one tunnel used).
+* Route-based mode allows distribute_traffic = true to enable active‑active tunnels; policy‑based does not.
 * If peer is behind NAT, use establish_mode = "peer_only" and supply FQDN and identity overrides because identities must match expected values on negotiation.
 
+Please refer [Known issues for VPN gateways](https://cloud.ibm.com/docs/vpc?topic=vpc-vpn-limitations) for more information.
 
 ### Usage
 
@@ -73,13 +140,43 @@ provider "ibm" {
   region           = local.region
 }
 
-module "module_template" {
-  source            = "terraform-ibm-modules/<replace>/ibm"
-  version           = "X.Y.Z" # Replace "X.Y.Z" with a release version to lock into a specific release
-  region            = local.region
-  name              = "instance-name"
-  resource_group_id = "xxXXxxXXxXxXXXXxxXxxxXXXXxXXXXX" # Replace with the actual ID of resource group to use
+module "site_to_site_vpn" {
+  source = "./terraform-site-to-site-vpn"
+  existing_resource_group_name = "existing-rg"
+
+  # Use existing VPN gateway
+  use_existing_vpn_gateway = true
+
+  # Use existing policies
+  use_existing_ike_policies    = true
+  use_existing_ipsec_policies  = true
+
+  vpn_connections = [
+    {
+      vpn_gateway_connection_name = "existing-gateway-connection"
+      vpn_gateway_id             = "vpn-gateway-existing-id"
+      ike_policy_id              = "ike-policy-existing-id"
+      ipsec_policy_id            = "ipsec-policy-existing-id"
+      preshared_key              = var.existing_preshared_key
+
+      peer = [
+        {
+          fqdn = "remote-peer.readme.com"
+          ike_identity = [
+            {
+              type  = "fqdn"
+              value = "remote-peer.readme.com"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+
+  use_existing_routing_table = true
+  routing_table_id = "routing-table-existing-id"
 }
+
 ```
 
 ### Required IAM access policies
@@ -130,7 +227,6 @@ statement instead the previous block.
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
-| <a name="requirement_ibm"></a> [ibm](#requirement\_ibm) | >= 1.80.3, < 2.0.0 |
 
 ### Modules
 
@@ -155,7 +251,6 @@ No resources.
 | <a name="input_existing_route_table_id"></a> [existing\_route\_table\_id](#input\_existing\_route\_table\_id) | ID of existing route table to use. If not provided, a new route table will be created | `string` | `null` | no |
 | <a name="input_ike_policies"></a> [ike\_policies](#input\_ike\_policies) | List of IKE policies to be created. | <pre>list(object({<br/>    name                     = string<br/>    resource_group           = optional(string)<br/>    ike_version              = optional(number, 2)<br/>    key_lifetime             = optional(number, 28800)<br/>    encryption_algorithm     = string<br/>    authentication_algorithm = string<br/>    dh_group                 = number<br/>  }))</pre> | `[]` | no |
 | <a name="input_ipsec_policies"></a> [ipsec\_policies](#input\_ipsec\_policies) | List of IPSec policies to be created. | <pre>list(object({<br/>    name                     = string<br/>    resource_group           = optional(string)<br/>    encryption_algorithm     = string<br/>    authentication_algorithm = string<br/>    pfs                      = string<br/>    key_lifetime             = optional(number, 3600)<br/>  }))</pre> | `[]` | no |
-| <a name="input_region"></a> [region](#input\_region) | The region to which to deploy the resources. | `string` | n/a | yes |
 | <a name="input_resource_group_id"></a> [resource\_group\_id](#input\_resource\_group\_id) | The ID of the resource group to use where you want to create the VPN gateway. | `string` | n/a | yes |
 | <a name="input_route_direct_link_ingress"></a> [route\_direct\_link\_ingress](#input\_route\_direct\_link\_ingress) | If true, allows routing table to route traffic from Direct Link into the VPC. | `bool` | `false` | no |
 | <a name="input_route_internet_ingress"></a> [route\_internet\_ingress](#input\_route\_internet\_ingress) | If true, allows routing table to route traffic that originates from the Internet. | `bool` | `false` | no |
@@ -178,7 +273,7 @@ No resources.
 | <a name="output_ipsec_policies"></a> [ipsec\_policies](#output\_ipsec\_policies) | List of IPSec Policies. |
 | <a name="output_vpn_connections"></a> [vpn\_connections](#output\_vpn\_connections) | List of VPN connections. |
 | <a name="output_vpn_gateways"></a> [vpn\_gateways](#output\_vpn\_gateways) | List of VPN gateways. |
-| <a name="output_vpn_route_tables"></a> [vpn\_route\_tables](#output\_vpn\_route\_tables) | VPN routing tables created per VPC. |
+| <a name="output_vpn_route_tables"></a> [vpn\_route\_tables](#output\_vpn\_route\_tables) | VPN routing tables created. |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 
 <!-- Leave this section as is so that your module has a link to local development environment set-up steps for contributors to follow -->

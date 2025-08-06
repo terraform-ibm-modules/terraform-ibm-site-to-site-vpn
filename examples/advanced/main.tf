@@ -13,26 +13,15 @@ module "resource_group" {
 ##############################################################################
 # Common Resources across both sites
 ##############################################################################
-
 resource "tls_private_key" "ssh_key" {
   algorithm = "RSA"
-}
-
-resource "ibm_is_ssh_key" "public_key" {
-  name           = "${var.prefix}-key"
-  public_key     = trimspace(tls_private_key.ssh_key.public_key_openssh)
-  resource_group = module.resource_group.resource_group_id
-  tags           = var.resource_tags
-}
-
-data "ibm_is_image" "image" {
-  name = "ibm-ubuntu-22-04-3-minimal-amd64-1"
 }
 
 locals {
   cidr_block_site_a = "10.100.10.0/24"
   cidr_block_site_b = "172.16.10.0/24"
   vsi_profile       = "bx2-2x8"
+  vsi_image         = "ibm-ubuntu-22-04-3-minimal-amd64-1"
   vpc_id_site_a     = ibm_is_vpc.vpc_site_a.id
   vpc_id_site_b     = ibm_is_vpc.vpc_site_b.id
 
@@ -63,6 +52,38 @@ locals {
       remote   = local.cidr_block_site_a
     }
   ]
+}
+
+##############################################################################
+# SSH Keys
+##############################################################################
+resource "ibm_is_ssh_key" "public_key_site_a" {
+  provider       = ibm.site_a
+  name           = "${var.prefix}-key-site-a"
+  public_key     = trimspace(tls_private_key.ssh_key.public_key_openssh)
+  resource_group = module.resource_group.resource_group_id
+  tags           = var.resource_tags
+}
+
+resource "ibm_is_ssh_key" "public_key_site_b" {
+  provider       = ibm.site_b
+  name           = "${var.prefix}-key-site-b"
+  public_key     = trimspace(tls_private_key.ssh_key.public_key_openssh)
+  resource_group = module.resource_group.resource_group_id
+  tags           = var.resource_tags
+}
+
+##############################################################################
+# VSI Image
+##############################################################################
+data "ibm_is_image" "image_site_a" {
+  provider = ibm.site_a
+  name     = local.vsi_image
+}
+
+data "ibm_is_image" "image_site_b" {
+  provider = ibm.site_b
+  name     = local.vsi_image
 }
 
 ##############################################################################
@@ -167,12 +188,10 @@ resource "ibm_is_security_group_rule" "sg_inbound_site_a" {
 
 resource "ibm_is_security_group_rule" "sg_outbound_site_a" {
   provider  = ibm.site_a
-  group     = ibm_is_security_group.sg_site_b.id
+  group     = ibm_is_security_group.sg_site_a.id
   direction = "outbound"
   remote    = local.cidr_block_site_b
 }
-
-# SGs for Site B follows heree
 
 resource "ibm_is_security_group" "sg_site_b" {
   provider       = ibm.site_b
@@ -206,7 +225,7 @@ resource "ibm_is_security_group_rule" "sg_inbound_site_b" {
 
 resource "ibm_is_security_group_rule" "sg_outbound_site_b" {
   provider  = ibm.site_b
-  group     = ibm_is_security_group.sg_site_a.id
+  group     = ibm_is_security_group.sg_site_b.id
   direction = "outbound"
   remote    = local.cidr_block_site_a
 }
@@ -219,7 +238,7 @@ resource "ibm_is_instance" "vsi_site_a" {
   provider = ibm.site_a
   count    = 1
   name     = "${var.prefix}-vsi-site-a-${count.index}"
-  image    = data.ibm_is_image.image.id
+  image    = data.ibm_is_image.image_site_a.id
   profile  = local.vsi_profile
 
   primary_network_attachment {
@@ -233,14 +252,14 @@ resource "ibm_is_instance" "vsi_site_a" {
   vpc            = local.vpc_id_site_a
   resource_group = module.resource_group.resource_group_id
   zone           = "${var.region_site_a}-1"
-  keys           = [ibm_is_ssh_key.public_key.id]
+  keys           = [ibm_is_ssh_key.public_key_site_a.id]
 }
 
 resource "ibm_is_instance" "vsi_site_b" {
   provider = ibm.site_b
   count    = 1
   name     = "${var.prefix}-vsi-site-b-${count.index}"
-  image    = data.ibm_is_image.image.id
+  image    = data.ibm_is_image.image_site_b.id
   profile  = local.vsi_profile
 
   primary_network_attachment {
@@ -254,34 +273,36 @@ resource "ibm_is_instance" "vsi_site_b" {
   vpc            = local.vpc_id_site_b
   resource_group = module.resource_group.resource_group_id
   zone           = "${var.region_site_b}-1"
-  keys           = [ibm_is_ssh_key.public_key.id]
+  keys           = [ibm_is_ssh_key.public_key_site_b.id]
 }
 
 ##############################################################################
-# Site-to-Site VPN
+# Site-to-Site VPN Configuration
 ##############################################################################
 
 locals {
-  # Common policies to be used for both sites
+
   ike_policy_name   = "${var.prefix}-ike-policy"
   ipsec_policy_name = "${var.prefix}-ipsec-policy"
-  ike_policy_map    = { for policy in module.site_to_site_vpn.ike_policies : policy.name => policy }
-  ipsec_policy_map  = { for policy in module.site_to_site_vpn.ipsec_policies : policy.name => policy }
 
-  # Site A related configuration
   vpn_gateway_site_a_name = "${var.prefix}-vpn-gw-site-a"
-  vpn_gateway_site_a_map  = { for gw in module.site_to_site_vpn.vpn_gateways : gw.vpn_gateway_site_a_name => gw }
-  vpn_gateway_site_a_id   = local.vpn_gateway_site_a_map[local.vpn_gateway_site_a_name].id
-  vpn_gateway_site_a_ip   = module.site_to_site_vpn.vpn_gateways[local.vpn_gateway_site_a_name].public_ip_address
-
-  # Site B related configuration
   vpn_gateway_site_b_name = "${var.prefix}-vpn-gw-site-b"
-  vpn_gateway_site_b_map  = { for gw in module.site_to_site_vpn.vpn_gateways : gw.vpn_gateway_site_b_name => gw }
-  vpn_gateway_site_b_id   = local.vpn_gateway_site_b_map[local.vpn_gateway_site_b_name].id
-  vpn_gateway_site_b_ip   = module.site_to_site_vpn.vpn_gateways[local.vpn_gateway_site_b_name].public_ip_address
 }
 
 locals {
+  ike_policy_map   = { for policy in module.site_to_site_vpn.ike_policies : policy.name => policy }
+  ipsec_policy_map = { for policy in module.site_to_site_vpn.ipsec_policies : policy.name => policy }
+  vpn_gateway_map  = { for gw in module.site_to_site_vpn.vpn_gateways : gw.vpn_gateway_name => gw }
+
+  vpn_gateway_site_a_id = local.vpn_gateway_map[local.vpn_gateway_site_a_name].vpn_gateway_id
+  vpn_gateway_site_a_ip = local.vpn_gateway_map[local.vpn_gateway_site_a_name].vpn_gateway_primary_ip
+
+  vpn_gateway_site_b_id = local.vpn_gateway_map[local.vpn_gateway_site_b_name].vpn_gateway_id
+  vpn_gateway_site_b_ip = local.vpn_gateway_map[local.vpn_gateway_site_b_name].vpn_gateway_primary_ip
+}
+
+locals {
+
   vpn_gateways = [
     {
       name      = local.vpn_gateway_site_a_name
@@ -313,11 +334,11 @@ locals {
     # Site A to Site B connection
     {
       vpn_gateway_connection_name = "${var.prefix}-vpn-conn-a-to-b"
-      vpn_gateway_site_a_name     = local.vpn_gateway_site_a_name
-      vpn_gateway_site_a_id       = local.vpn_gateway_site_a_id
-      preshared_key               = var.preshared_key
-      ike_policy_id               = local.ike_policy_map[local.ike_policy_name].id
-      ipsec_policy_id             = local.ipsec_policy_map[local.ipsec_policy_name].id
+      vpn_gateway_name            = local.vpn_gateway_site_a_name
+      # vpn_gateway_id  = local.vpn_gateway_site_a_id
+      preshared_key   = var.preshared_key
+      ike_policy_id   = local.ike_policy_map[local.ike_policy_name].id
+      ipsec_policy_id = local.ipsec_policy_map[local.ipsec_policy_name].id
 
       peer = [
         {
@@ -341,11 +362,11 @@ locals {
     # Site B to Site A connection
     {
       vpn_gateway_connection_name = "${var.prefix}-vpn-conn-b-to-a"
-      vpn_gateway_site_a_name     = local.vpn_gateway_site_b_name
-      vpn_gateway_site_a_id       = local.vpn_gateway_site_b_id
-      preshared_key               = var.preshared_key
-      ike_policy_id               = local.ike_policy_map[local.ike_policy_name].id
-      ipsec_policy_id             = local.ipsec_policy_map[local.ipsec_policy_name].id
+      vpn_gateway_name            = local.vpn_gateway_site_b_name
+      # vpn_gateway_id  = local.vpn_gateway_site_b_id
+      preshared_key   = var.preshared_key
+      ike_policy_id   = local.ike_policy_map[local.ike_policy_name].id
+      ipsec_policy_id = local.ipsec_policy_map[local.ipsec_policy_name].id
 
       peer = [
         {
@@ -392,8 +413,8 @@ locals {
 }
 
 module "site_to_site_vpn" {
+  depends_on        = [ibm_is_vpc.vpc_site_a, ibm_is_vpc.vpc_site_b]
   source            = "../.."
-  region            = var.region_site_a
   resource_group_id = module.resource_group.resource_group_id
   tags              = var.resource_tags
 
@@ -402,8 +423,8 @@ module "site_to_site_vpn" {
 
   vpn_gateways    = local.vpn_gateways
   vpn_connections = local.vpn_connections
+  vpn_routes      = local.vpn_routes
 
-  vpn_routes                       = local.vpn_routes
   create_route_table               = true
   accept_routes_from_resource_type = ["vpn_gateway"]
   route_vpc_zone_ingress           = true
@@ -414,15 +435,18 @@ module "site_to_site_vpn" {
 ##############################################################################
 
 resource "terraform_data" "test_vsi_communication" {
+  depends_on = [module.site_to_site_vpn]
 
   input = {
-    ip_addr_site_a = module.site_to_site_vpn.vsi_private_ip_site_a
-    ip_addr_site_b = module.site_to_site_vpn.vsi_private_ip_site_b
-    ssh_key        = tls_private_key.ssh_key.private_key_pem
+    vsi_ip_site_a = local.vpn_gateway_site_a_ip
+    vsi_ip_site_b = local.vpn_gateway_site_b_ip
+    ssh_key       = tls_private_key.ssh_key.private_key_pem
   }
 
   provisioner "local-exec" {
-    command     = "./scripts/test_connectivity.s ${self.input.ip_addr_site_a} ${self.input.ip_addr_site_b} ${self.input.ssh_key}"
+    command     = "./scripts/test_connectivity.s ${self.input.vsi_ip_site_a} ${self.input.vsi_ip_site_b} ${self.input.ssh_key}"
     interpreter = ["/bin/bash", "-c"]
   }
 }
+
+##############################################################################

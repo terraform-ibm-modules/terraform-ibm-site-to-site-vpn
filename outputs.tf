@@ -22,13 +22,10 @@ output "vpn_connections" {
 }
 
 output "vpn_route_tables" {
-  description = "VPN routing tables created per VPC."
-  value = {
-    for vpc_id, routes in local.vpn_routes_map :
-    vpc_id => {
-      routing_table_id = module.vpn_routes[vpc_id].routing_table_id
-      routes_count     = module.vpn_routes[vpc_id].routes_count
-      created_routes   = module.vpn_routes[vpc_id].created_routes
-    }
-  }
+  description = "VPN routing tables created."
+  value = length(module.vpn_routes) > 0 ? {
+    route_table_id = module.vpn_routes[0].route_table_id
+    routes_count   = module.vpn_routes[0].routes_count
+    created_routes = module.vpn_routes[0].created_routes
+  } : null
 }
