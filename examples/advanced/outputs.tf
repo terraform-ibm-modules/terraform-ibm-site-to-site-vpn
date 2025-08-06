@@ -1,38 +1,44 @@
-##############################################################################
-# Outputs
-##############################################################################
+# ########################################################################################################################
+# # Outputs
+# ########################################################################################################################
 
-#
-# Developer tips:
-#   - Include all relevant outputs from the modules being called in the example
-#
-
-output "account_id" {
-  description = "An alpha-numeric value identifying the account ID."
-  value       = module.cos.account_id
+output "vpc_id_site_a" {
+  description = "VPC ID of Site A."
+  value       = local.vpc_id_site_a
 }
 
-output "guid" {
-  description = "The GUID of the resource instance."
-  value       = module.cos.account_id
+output "vpc_id_site_b" {
+  description = "VPC ID of Site B."
+  value       = local.vpc_id_site_b
 }
 
-output "id" {
-  description = "The unique identifier of the resource instance."
-  value       = module.cos.id
+output "vsi_private_ip_site_a" {
+  description = "Site A VSI private IP"
+  #   value       = ibm_is_instance.vsi_site_a[0].primary_network_attachment[0].virtual_network_interface[0].primary_ip[0].address
+  value = ibm_is_instance.vsi_site_a[0].primary_network_attachment[0].primary_ip[0].address
 }
 
-output "crn" {
-  description = "The CRN of the resource instance."
-  value       = module.cos.crn
+output "vsi_private_ip_site_b" {
+  description = "Site B VSI private IP"
+  #   value       = ibm_is_instance.vsi_site_b[0].primary_network_attachment[0].virtual_network_interface[0].primary_ip[0].address
+  value = ibm_is_instance.vsi_site_b[0].primary_network_attachment[0].primary_ip[0].address
 }
 
-output "resource_group_name" {
-  description = "Resource group name."
-  value       = module.resource_group.resource_group_name
+output "vpn_gateway_ips" {
+  description = "VPN Gateway public IPs."
+  value = {
+    site_a = local.vpn_gateway_site_a_ip
+    site_b = local.vpn_gateway_site_b_ip
+  }
 }
 
-output "resource_group_id" {
-  description = "Resource group ID."
-  value       = module.resource_group.resource_group_id
+output "vpn_connections_status" {
+  description = "VPN connections status"
+  value       = module.site_to_site_vpn.vpn_connections
+}
+
+output "ssh_private_key" {
+  description = "SSH private key for VSI access"
+  value       = tls_private_key.ssh_key.private_key_pem
+  sensitive   = true
 }

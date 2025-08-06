@@ -2,29 +2,30 @@
 # Outputs
 ########################################################################################################################
 
-#
-# Developer tips:
-#   - Below are some good practise sample outputs
-#   - They should be updated for outputs applicable to the module being added
-#   - Use variable validation when possible
-#
-
-output "account_id" {
-  description = "An alpha-numeric value identifying the account ID."
-  value       = ibm_resource_instance.cos_instance.account_id
+output "ike_policies" {
+  description = "List of IKE Policies."
+  value       = module.vpn_policies.ike_policies
 }
 
-output "guid" {
-  description = "The GUID of the resource instance."
-  value       = ibm_resource_instance.cos_instance.guid
+output "ipsec_policies" {
+  description = "List of IPSec Policies."
+  value       = module.vpn_policies.ipsec_policies
 }
 
-output "id" {
-  description = "The unique identifier of the resource instance."
-  value       = ibm_resource_instance.cos_instance.id
+output "vpn_gateways" {
+  description = "List of VPN gateways."
+  value       = [for gateway in module.vpn_gateway : gateway]
+}
+output "vpn_connections" {
+  description = "List of VPN connections."
+  value       = [for conn in module.vpn_connections : conn]
 }
 
-output "crn" {
-  description = "The CRN of the resource instance."
-  value       = ibm_resource_instance.cos_instance.crn
+output "vpn_route_tables" {
+  description = "VPN routing tables created."
+  value = length(module.vpn_routes) > 0 ? {
+    route_table_id = module.vpn_routes[0].route_table_id
+    routes_count   = module.vpn_routes[0].routes_count
+    created_routes = module.vpn_routes[0].created_routes
+  } : null
 }

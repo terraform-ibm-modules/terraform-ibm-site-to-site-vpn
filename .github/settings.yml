@@ -25,4 +25,4 @@ repository:
   description: "Automation for configuring site-to-site VPN gateways."
 
   # Use a comma-separated list of topics to set on the repo (ensure not to use any caps in the topic string).
-  topics: terraform, ibm-cloud, terraform-module, core-team, site-to-site, vpn, gateway
+  topics: terraform, ibm-cloud, terraform-module, core-team, site-to-site, vpn, supported, graduated, gateway

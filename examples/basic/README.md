@@ -1,11 +1,11 @@
-# Basic example
 
-<!--
-The basic example should call the module(s) stored in this repository with a basic configuration.
-Note, there is a pre-commit hook that will take the title of each example and include it in the repos main README.md.
-The text below should describe exactly what resources are provisioned / configured by the example.
--->
+# Basic Site-to-Site VPN Example
 
-An end-to-end basic example that will provision the following:
-- A new resource group if one is not passed in.
-- A new standard plan Cloud Object Storage instance using the root level module.
+This example demonstrates how to create a basic site-to-site VPN connection using the IBM Cloud Site-to-Site VPN module. This example will:
+
+- Create a new resource group if one is not passed in.
+- Create a new VPC in the resource group.
+- Create single zone subnet.
+- Create a VPN gateway in route mode.
+- Create IKE and IPSec policies.
+- Create a VPN connection.
