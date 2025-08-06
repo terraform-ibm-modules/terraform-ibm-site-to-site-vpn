@@ -335,10 +335,9 @@ locals {
     {
       vpn_gateway_connection_name = "${var.prefix}-vpn-conn-a-to-b"
       vpn_gateway_name            = local.vpn_gateway_site_a_name
-      # vpn_gateway_id  = local.vpn_gateway_site_a_id
-      preshared_key   = var.preshared_key
-      ike_policy_id   = local.ike_policy_map[local.ike_policy_name].id
-      ipsec_policy_id = local.ipsec_policy_map[local.ipsec_policy_name].id
+      preshared_key               = var.preshared_key
+      ike_policy_id               = local.ike_policy_map[local.ike_policy_name].id
+      ipsec_policy_id             = local.ipsec_policy_map[local.ipsec_policy_name].id
 
       peer = [
         {
@@ -363,10 +362,9 @@ locals {
     {
       vpn_gateway_connection_name = "${var.prefix}-vpn-conn-b-to-a"
       vpn_gateway_name            = local.vpn_gateway_site_b_name
-      # vpn_gateway_id  = local.vpn_gateway_site_b_id
-      preshared_key   = var.preshared_key
-      ike_policy_id   = local.ike_policy_map[local.ike_policy_name].id
-      ipsec_policy_id = local.ipsec_policy_map[local.ipsec_policy_name].id
+      preshared_key               = var.preshared_key
+      ike_policy_id               = local.ike_policy_map[local.ike_policy_name].id
+      ipsec_policy_id             = local.ipsec_policy_map[local.ipsec_policy_name].id
 
       peer = [
         {
