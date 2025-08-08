@@ -1,4 +1,11 @@
 ##############################################################################
+variable "resource_group" {
+  description = "Optional resource group ID for the IKE and IPSec policies. If not provided, default will be used."
+  type        = string
+  default     = null
+}
+
+##############################################################################
 # IKE Policy
 ##############################################################################
 
@@ -59,12 +66,6 @@ variable "ike_key_lifetime" {
   }
 }
 
-variable "ike_resource_group" {
-  description = "Optional resource group ID for the IKE policy. If not provided, default will be used."
-  type        = string
-  default     = null
-}
-
 ##############################################################################
 # IPSec Policy
 ##############################################################################
@@ -119,10 +120,4 @@ variable "ipsec_key_lifetime" {
     condition     = var.ipsec_key_lifetime >= 300 && var.ipsec_key_lifetime <= 86400
     error_message = "Key lifetime must be between 300 and 86400 seconds."
   }
-}
-
-variable "ipsec_resource_group" {
-  description = "Optional resource group ID for the IPSec policy. If not provided, default will be used."
-  type        = string
-  default     = null
 }

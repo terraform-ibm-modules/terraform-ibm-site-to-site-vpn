@@ -22,12 +22,12 @@ locals {
 
 resource "ibm_is_ike_policy" "ike" {
   name                     = var.ike_policy_name
+  resource_group           = var.resource_group
   authentication_algorithm = var.ike_authentication_algorithm
   encryption_algorithm     = var.ike_encryption_algorithm
   dh_group                 = var.ike_dh_group
   ike_version              = var.ike_version
   key_lifetime             = var.ike_key_lifetime
-  resource_group           = var.ike_resource_group
 }
 
 
@@ -36,11 +36,11 @@ resource "ibm_is_ike_policy" "ike" {
 ###########################################################################################
 resource "ibm_is_ipsec_policy" "ipsec" {
   name                     = var.ipsec_policy_name
+  resource_group           = var.resource_group
   authentication_algorithm = var.ipsec_authentication_algorithm
   encryption_algorithm     = var.ipsec_encryption_algorithm
   pfs                      = var.ipsec_pfs
   key_lifetime             = var.ipsec_key_lifetime
-  resource_group           = var.ipsec_resource_group
 }
 
 ###########################################################################################
