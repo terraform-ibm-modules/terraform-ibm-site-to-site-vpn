@@ -2,7 +2,6 @@
 locals {
 
   ike_policy = {
-    lifetime            = { min = 1800, max = 86400 }
     authentication_algo = ["sha256", "sha384", "sha512"]
     encryption_algo     = ["aes128", "aes192", "aes256"]
     dh_groups           = [14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 31]
@@ -10,7 +9,6 @@ locals {
   }
 
   ipsec_policy = {
-    lifetime            = { min = 300, max = 86400 }
     authentication_algo = ["sha256", "sha384", "sha512", "disabled"]
     encryption_algo     = ["aes128", "aes192", "aes256", "aes128gcm16", "aes192gcm16", "aes256gcm16"]
     pfs                 = ["disabled", "group_2", "group_5", "group_14"]
@@ -23,28 +21,26 @@ locals {
 ###########################################################################################
 
 resource "ibm_is_ike_policy" "ike" {
-  for_each                 = { for policy in var.ike_policies : policy.name => policy }
-  name                     = each.key
-  authentication_algorithm = each.value.authentication_algorithm
-  encryption_algorithm     = each.value.encryption_algorithm
-  dh_group                 = each.value.dh_group
-  ike_version              = each.value.ike_version
-  key_lifetime             = each.value.key_lifetime
-  resource_group           = var.resource_group_id
+  name                     = var.ike_policy_name
+  authentication_algorithm = var.ike_authentication_algorithm
+  encryption_algorithm     = var.ike_encryption_algorithm
+  dh_group                 = var.ike_dh_group
+  ike_version              = var.ike_version
+  key_lifetime             = var.ike_key_lifetime
+  resource_group           = var.ike_resource_group
 }
+
 
 ###########################################################################################
 # Internet Protocol Security (IPSec) Policy
 ###########################################################################################
-
 resource "ibm_is_ipsec_policy" "ipsec" {
-  for_each                 = { for policy in var.ipsec_policies : policy.name => policy }
-  name                     = each.key
-  authentication_algorithm = each.value.authentication_algorithm
-  encryption_algorithm     = each.value.encryption_algorithm
-  pfs                      = each.value.pfs
-  key_lifetime             = each.value.key_lifetime
-  resource_group           = var.resource_group_id
+  name                     = var.ipsec_policy_name
+  authentication_algorithm = var.ipsec_authentication_algorithm
+  encryption_algorithm     = var.ipsec_encryption_algorithm
+  pfs                      = var.ipsec_pfs
+  key_lifetime             = var.ipsec_key_lifetime
+  resource_group           = var.ipsec_resource_group
 }
 
 ###########################################################################################
