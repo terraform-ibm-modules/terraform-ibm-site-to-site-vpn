@@ -14,12 +14,12 @@ output "vpc_id_site_b" {
 
 output "vsi_private_ip_site_a" {
   description = "Site A VSI private IP"
-  value = ibm_is_instance.vsi_site_a[0].primary_network_attachment[0].primary_ip[0].address
+  value       = ibm_is_instance.vsi_site_a[0].primary_network_attachment[0].primary_ip[0].address
 }
 
 output "vsi_private_ip_site_b" {
   description = "Site B VSI private IP"
-  value = ibm_is_instance.vsi_site_b[0].primary_network_attachment[0].primary_ip[0].address
+  value       = ibm_is_instance.vsi_site_b[0].primary_network_attachment[0].primary_ip[0].address
 }
 
 output "vpn_gateway_ips" {
