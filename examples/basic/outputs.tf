@@ -26,3 +26,8 @@ output "vpn_connections" {
   description = "VPN connection information."
   value       = module.site_to_site_vpn.vpn_connections
 }
+
+output "vpn_routes" {
+  description = "VPN routing information for site."
+  value       = module.site_to_site_vpn.vpn_routes
+}

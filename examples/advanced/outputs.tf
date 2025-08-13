@@ -49,3 +49,13 @@ output "floating_ip_address_site_b" {
   description = "Public Floating IP address of the VSI for site B."
   value       = ibm_is_floating_ip.floating_ip_vsi_site_b.address
 }
+
+output "vpn_routes_site_a" {
+  description = "VPN routing information for site A."
+  value       = module.site_a_to_site_b.vpn_routes
+}
+
+output "vpn_routes_site_b" {
+  description = "VPN routing information for site B."
+  value       = module.site_b_to_site_a.vpn_routes
+}
