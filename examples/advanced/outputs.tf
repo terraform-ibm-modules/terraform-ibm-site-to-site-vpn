@@ -14,31 +14,38 @@ output "vpc_id_site_b" {
 
 output "vsi_private_ip_site_a" {
   description = "Site A VSI private IP"
-  #   value       = ibm_is_instance.vsi_site_a[0].primary_network_attachment[0].virtual_network_interface[0].primary_ip[0].address
   value = ibm_is_instance.vsi_site_a[0].primary_network_attachment[0].primary_ip[0].address
 }
 
 output "vsi_private_ip_site_b" {
   description = "Site B VSI private IP"
-  #   value       = ibm_is_instance.vsi_site_b[0].primary_network_attachment[0].virtual_network_interface[0].primary_ip[0].address
   value = ibm_is_instance.vsi_site_b[0].primary_network_attachment[0].primary_ip[0].address
 }
 
 output "vpn_gateway_ips" {
   description = "VPN Gateway public IPs."
   value = {
-    site_a = local.vpn_gateway_site_a_ip
-    site_b = local.vpn_gateway_site_b_ip
+    site_a = module.vpn_gateway_site_a.vpn_gateway_public_ip
+    site_b = module.vpn_gateway_site_b.vpn_gateway_public_ip
   }
 }
 
-output "vpn_connections_status" {
-  description = "VPN connections status"
-  value       = module.site_to_site_vpn.vpn_connections
+output "vpn_connections_status_site_a" {
+  description = "VPN connections status for Site A"
+  value       = module.site_a_to_site_b.vpn_connection
 }
 
-output "ssh_private_key" {
-  description = "SSH private key for VSI access"
-  value       = tls_private_key.ssh_key.private_key_pem
-  sensitive   = true
+output "vpn_connections_status_site_b" {
+  description = "VPN connections status for Site B"
+  value       = module.site_b_to_site_a.vpn_connection
+}
+
+output "floating_ip_address_site_a" {
+  description = "Public Floating IP address of the VSI for site A."
+  value       = ibm_is_floating_ip.floating_ip_vsi_site_a.address
+}
+
+output "floating_ip_address_site_b" {
+  description = "Public Floating IP address of the VSI for site B."
+  value       = ibm_is_floating_ip.floating_ip_vsi_site_b.address
 }

@@ -47,10 +47,11 @@ variable "enable_distribute_traffic" {
 }
 
 variable "peer" {
-  description = "Optional configuration for the remote peer VPN gateway. Includes peer address/FQDN, IKE identity type, and optional identity value."
+  description = "Optional configuration for the remote peer VPN gateway. Includes peer address/FQDN, CIDRs, IKE identity type, and optional identity value."
   type = list(object({
     address = optional(string)
     fqdn    = optional(string)
+    cidrs   = optional(list(string), [])
     ike_identity = list(object({
       type  = string
       value = optional(string)
@@ -92,6 +93,12 @@ variable "local" {
       ])
     ])
     error_message = "Each ike_identity 'type' must be one of: fqdn, hostname, ipv4_address, or key_id."
+  }
+  validation {
+    condition = length(var.local) == 0 || alltrue([
+      for member in var.local : length(member.ike_identities) == 2
+    ])
+    error_message = "Each 'local' entry must have exactly 2 ike_identities."
   }
 }
 

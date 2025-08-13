@@ -108,6 +108,23 @@ variable "route_internet_ingress" {
   default     = false
 }
 
+variable "attach_subnet" {
+  description = "Whether to attach subnet to the VPN route table."
+  type        = bool
+  default     = false
+}
+
+variable "subnet_id_to_attach" {
+  description = "Subnet ID to attach to the routing table."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = !var.attach_subnet || var.subnet_id_to_attach != null
+    error_message = "When attach_subnet is true, you must provide a valid subnet ID."
+  }
+}
+
 #####################################################################################
 # Routes Variables
 #####################################################################################

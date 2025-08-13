@@ -15,6 +15,7 @@ resource "ibm_is_vpn_gateway_connection" "vpn_gw_conn" {
     content {
       address = lookup(peer.value, "address", null)
       fqdn    = lookup(peer.value, "fqdn", null)
+      cidrs   = lookup(peer.value, "cidrs", [])
       dynamic "ike_identity" {
         for_each = peer.value.ike_identity
         content {

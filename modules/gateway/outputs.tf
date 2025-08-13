@@ -33,7 +33,7 @@ output "vpn_gateway_members" {
   ]
 }
 
-output "vpn_gateway_health_state" {
+output "vpn_gateway_status" {
   description = "Overall health state of the VPN gateway. Refer [here](https://registry.terraform.io/providers/IBM-cloud/ibm/1.80.4/docs/resources/is_vpn_gateway#health_state-4) for more information."
   value       = ibm_is_vpn_gateway.vpn_gateway.health_state
 }

@@ -1,19 +1,42 @@
-locals {
-  # Convert the vpn inputs from list to a map
-  vpn_gateway_map     = { for gateway in var.vpn_gateways : gateway.name => gateway }
-  vpn_connections_map = { for conn in var.vpn_connections : conn.vpn_gateway_connection_name => conn }
-  gateways_to_create  = var.use_existing_vpn_gateway ? {} : local.vpn_gateway_map
-}
-
 ##############################################################################
 # VPN Policies (IPSec and IKE)
 ##############################################################################
 
 module "vpn_policies" {
-  source            = "./modules/vpn_policies"
-  resource_group_id = var.resource_group_id
-  ike_policies      = var.ike_policies
-  ipsec_policies    = var.ipsec_policies
+  count                          = var.create_vpn_policies ? 1 : 0
+  source                         = "./modules/vpn_policies"
+  resource_group                 = var.resource_group_id
+  ike_policy_name                = var.ike_policy_name
+  ike_authentication_algorithm   = var.ike_authentication_algorithm
+  ike_encryption_algorithm       = var.ike_encryption_algorithm
+  ike_dh_group                   = var.ike_dh_group
+  ike_version                    = var.ike_version
+  ike_key_lifetime               = var.ike_key_lifetime
+  ipsec_policy_name              = var.ipsec_policy_name
+  ipsec_encryption_algorithm     = var.ipsec_encryption_algorithm
+  ipsec_authentication_algorithm = var.ipsec_authentication_algorithm
+  ipsec_pfs                      = var.ipsec_pfs
+  ipsec_key_lifetime             = var.ipsec_key_lifetime
+  # lifecycle {
+  #   precondition {
+  #     condition = var.create_vpn_policies == false || (
+  #       var.ike_policy_name != null &&
+  #       var.ike_authentication_algorithm != null &&
+  #       var.ike_encryption_algorithm != null &&
+  #       var.ike_dh_group != null &&
+  #       var.ipsec_policy_name != null &&
+  #       var.ipsec_encryption_algorithm != null &&
+  #       var.ipsec_authentication_algorithm != null &&
+  #       var.ipsec_pfs != null
+  #     )
+  #     error_message = "When create_vpn_policies is true, all policy configuration variables must be provided."
+  #   }
+  # }
+}
+
+locals {
+  should_lookup_ipsec = !var.create_vpn_policies && var.existing_ipsec_policy_id == null && var.ipsec_policy_name != null
+  should_lookup_ike   = !var.create_vpn_policies && var.existing_ike_policy_id == null && var.ike_policy_name != null
 }
 
 ##############################################################################
@@ -21,12 +44,12 @@ module "vpn_policies" {
 ##############################################################################
 
 module "vpn_gateway" {
+  count             = var.create_vpn_gateway ? 1 : 0
   source            = "./modules/gateway"
-  for_each          = local.gateways_to_create
   resource_group_id = var.resource_group_id
-  vpn_gateway_name  = each.key
-  vpn_gateway_mode  = each.value.mode
-  subnet_id         = each.value.subnet_id
+  vpn_gateway_name  = var.vpn_gateway_name
+  vpn_gateway_mode  = var.vpn_gateway_mode
+  subnet_id         = var.vpn_gateway_subnet_id
   tags              = var.tags
 }
 
@@ -34,27 +57,46 @@ module "vpn_gateway" {
 # Site to Site VPN Gateway Connection
 ##############################################################################
 
-module "vpn_connections" {
-  source                      = "./modules/gateway_connection"
-  for_each                    = local.vpn_connections_map
-  vpn_gateway_connection_name = each.key
-  vpn_gateway_id              = var.use_existing_vpn_gateway ? each.value.vpn_gateway_id : module.vpn_gateway[each.value.vpn_gateway_name].vpn_gateway_id
-  preshared_key               = each.value.preshared_key
-  establish_mode              = each.value.establish_mode
-  is_admin_state_up           = each.value.is_admin_state_up
-  enable_distribute_traffic   = each.value.enable_distribute_traffic
-  peer                        = each.value.peer
-  local                       = each.value.local
-  dpd_action                  = each.value.dpd_action
-  dpd_check_interval          = each.value.dpd_check_interval
-  dpd_max_timeout             = each.value.dpd_max_timeout
+locals {
 
-  ike_policy_id = var.use_existing_ike_policy ? each.value.ike_policy_id : (
-    each.value.ike_policy_name != null ? module.vpn_policies.ike_policies[each.value.ike_policy_name].id : null
+  vpn_gateway_id = (
+    var.create_vpn_gateway ? module.vpn_gateway[0].vpn_gateway_id :
+    var.existing_vpn_gateway_id != null ? var.existing_vpn_gateway_id : null
   )
-  ipsec_policy_id = var.use_existing_ipsec_policy ? each.value.ipsec_policy_id : (
-    each.value.ipsec_policy_name != null ? module.vpn_policies.ipsec_policies[each.value.ipsec_policy_name].id : null
+
+  ike_policy_id = (
+    var.create_vpn_policies ? module.vpn_policies[0].ike_policy_id :
+    var.existing_ike_policy_id != null ? var.existing_ike_policy_id : null
   )
+
+  ipsec_policy_id = (
+    var.create_vpn_policies ? module.vpn_policies[0].ipsec_policy_id :
+    var.existing_ipsec_policy_id != null ? var.existing_ipsec_policy_id : null
+  )
+}
+
+module "vpn_connection" {
+  count      = var.create_connection ? 1 : 0
+  depends_on = [module.vpn_gateway, module.vpn_policies]
+  source     = "./modules/gateway_connection"
+
+  vpn_gateway_connection_name = var.connection_name
+  vpn_gateway_id              = local.vpn_gateway_id
+  preshared_key               = var.preshared_key
+  establish_mode              = var.establish_mode
+  is_admin_state_up           = var.is_admin_state_up
+  enable_distribute_traffic   = var.enable_distribute_traffic
+  peer                        = var.peer_config
+  local                       = var.local_config
+
+  # DPD settings
+  dpd_action         = var.dpd_action
+  dpd_check_interval = var.dpd_check_interval
+  dpd_max_timeout    = var.dpd_max_timeout
+
+  # Policy IDs
+  ike_policy_id   = local.ike_policy_id
+  ipsec_policy_id = local.ipsec_policy_id
 }
 
 ##############################################################################
@@ -62,24 +104,24 @@ module "vpn_connections" {
 ##############################################################################
 
 module "vpn_routes" {
-  depends_on = [module.vpn_gateway, module.vpn_connections]
-  source     = "./modules/vpn_routing"
-  count      = length(var.vpn_routes) > 0 ? 1 : 0
-
-  vpc_id                  = var.vpn_routes[0].vpc_id # Use first route's VPC ID
+  count                   = var.create_routes ? 1 : 0
+  depends_on              = [module.vpn_connection]
+  source                  = "./modules/vpn_routing"
+  vpc_id                  = var.vpc_id
   existing_route_table_id = var.existing_route_table_id
   create_route_table      = var.create_route_table
-  routing_table_name      = var.routing_table_name != null ? var.routing_table_name : "vpn-routing-table"
-
+  routing_table_name      = var.routing_table_name
+  attach_subnet           = var.attach_subnet
+  subnet_id_to_attach     = var.subnet_id
   vpn_routes = [
-    for route in var.vpn_routes : {
+    for route in var.routes : {
       name        = route.name
       zone        = route.zone
       destination = route.destination
       action      = route.action
       advertise   = route.advertise
       priority    = route.priority
-      next_hop    = route.next_hop
+      next_hop    = local.vpn_gateway_id
     }
   ]
   existing_routes = []

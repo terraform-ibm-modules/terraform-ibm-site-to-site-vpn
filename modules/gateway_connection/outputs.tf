@@ -2,9 +2,14 @@
 # Outputs
 ##############################################################################
 
+output "vpn_gateway_connection_name" {
+  description = "Name of the VPN gateway connection."
+  value       = var.vpn_gateway_connection_name
+}
+
 output "vpn_gateway_connection_id" {
   description = "Unique identifier of the VPN gateway connection."
-  value       = ibm_is_vpn_gateway_connection.vpn_gw_conn.id
+  value       = ibm_is_vpn_gateway_connection.vpn_gw_conn.gateway_connection
 }
 
 # This is part of attribute reference but giving errors now.
@@ -35,11 +40,10 @@ output "vpn_gateway_connection_mode" {
 
 output "vpn_status_reasons" {
   description = "List of status reasons explaining the current connection state."
-  value = [
+  value = length(try(ibm_is_vpn_gateway_connection.vpn_gw_conn.status_reasons, [])) > 0 ? [
     for reason in ibm_is_vpn_gateway_connection.vpn_gw_conn.status_reasons : {
-      code      = reason.code
-      message   = reason.message
-      more_info = reason.more_info
-    }
-  ]
+      code      = try(reason.code, null)
+      message   = try(reason.message, null)
+      more_info = try(reason.more_info, null)
+  }] : null
 }

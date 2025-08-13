@@ -4,10 +4,12 @@
 
 set -e
 
-SITE_A_IP=$1
-SITE_B_IP=$2
-SSH_KEY=$3
-SSH_USER="${SSH_USER:-root}"
+SITE_A_PUB_IP=$1
+SITE_B_PUB_IP=$2
+SITE_A_IP=$3
+SITE_B_IP=$4
+SSH_KEY=$5
+SSH_USER="${SSH_USER:-ubuntu}"
 TMP_SSH_KEY="/tmp/vpn_test_key_$$" # appending the process id
 
 cleanup() {
@@ -68,8 +70,8 @@ main() {
 
     ssh_key_init
 
-    test_ssh_connection "Site A" "$SITE_A_IP"
-    test_ssh_connection "Site B" "$SITE_B_IP"
+    test_ssh_connection "Site A" "$SITE_A_PUB_IP"
+    test_ssh_connection "Site B" "$SITE_B_PUB_IP"
 
     echo "SSH connections successful."
     echo "=============================================="
