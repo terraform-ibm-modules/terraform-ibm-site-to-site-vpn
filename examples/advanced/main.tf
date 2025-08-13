@@ -40,7 +40,6 @@ module "vpn_gateway_site_a" {
   ipsec_encryption_algorithm     = "aes256"
   ipsec_authentication_algorithm = "sha256"
   ipsec_pfs                      = "group_14"
-  create_connection              = false
 }
 
 module "vpn_gateway_site_b" {
@@ -65,7 +64,6 @@ module "vpn_gateway_site_b" {
   ipsec_encryption_algorithm     = "aes256"
   ipsec_authentication_algorithm = "sha256"
   ipsec_pfs                      = "group_14"
-  create_connection              = false
 }
 
 module "site_a_to_site_b" {

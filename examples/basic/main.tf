@@ -29,86 +29,81 @@ resource "ibm_is_subnet" "subnet_zone_1" {
 }
 
 ########################################################################################################################
-## VPN
+## Site to Site VPN
 ########################################################################################################################
-locals {
-  vpn_gateway_name = "${var.prefix}-vpn-gateway"
-  vpn_gateway_id   = local.vpn_gateway_map[local.vpn_gateway_name].vpn_gateway_id
-
-  vpn_gateway_map  = { for gw in module.site_to_site_vpn.vpn_gateways : gw.vpn_gateway_name => gw }
-  ike_policy_map   = { for policy in module.site_to_site_vpn.ike_policies : policy.name => policy }
-  ipsec_policy_map = { for policy in module.site_to_site_vpn.ipsec_policies : policy.name => policy }
-}
-
-locals {
-
-  # VPN Gateway
-  vpn_gw = [
-    {
-      name      = local.vpn_gateway_name
-      subnet_id = ibm_is_subnet.subnet_zone_1.id
-      mode      = "route"
-      tags      = var.tags
-    }
-  ]
-  # Policies
-  ike_policies = [
-    {
-      name                     = "${var.prefix}-ike-policy"
-      encryption_algorithm     = "aes256"
-      authentication_algorithm = "sha256"
-      dh_group                 = 14
-    }
-  ]
-
-  ipsec_policies = [
-    {
-      name                     = "${var.prefix}-ipsec-policy"
-      encryption_algorithm     = "aes256"
-      authentication_algorithm = "sha256"
-      pfs                      = "group_14"
-    }
-  ]
-
-  # VPN Connection
-  vpn_conn = [
-    {
-      vpn_gateway_connection_name = "${var.prefix}-vpn-conn"
-      vpn_gateway_name            = local.vpn_gateway_name
-      vpn_gateway_id              = local.vpn_gateway_id
-      preshared_key               = var.preshared_key
-      ike_policy_id               = local.ike_policy_map["${var.prefix}-ike-policy"].id
-      ipsec_policy_id             = local.ipsec_policy_map["${var.prefix}-ipsec-policy"].id
-      local = [{
-        ike_identities = [
-          {
-            type  = "fqdn"
-            value = "${var.prefix}.local.example"
-          },
-          {
-            type  = "fqdn"
-            value = "${var.prefix}-2.local.example"
-          }
-        ]
-      }]
-
-      peer = [{
-        address = cidrhost(ibm_is_subnet.subnet_zone_1.ipv4_cidr_block, 4)
-        ike_identity = [{
-          type  = "fqdn"
-          value = "${var.prefix}.peer.example"
-        }]
-      }]
-    }
-  ]
-
-}
-
 module "site_to_site_vpn" {
   source            = "../.."
   resource_group_id = module.resource_group.resource_group_id
-  ike_policies      = local.ike_policies
-  ipsec_policies    = local.ipsec_policies
-  vpn_gateways      = local.vpn_gw
-  vpn_connections   = local.vpn_conn
+  tags              = var.tags
+
+  # Create VPN Gateway
+  create_vpn_gateway    = true
+  vpn_gateway_name      = "${var.prefix}-vpn-gateway"
+  vpn_gateway_subnet_id = ibm_is_subnet.subnet_zone_1.id
+  vpn_gateway_mode      = "route"
+
+  # Create Policies
+  create_vpn_policies            = true
+  ike_policy_name                = "${var.prefix}-ike-policy"
+  ike_authentication_algorithm   = "sha256"
+  ike_encryption_algorithm       = "aes256"
+  ike_dh_group                   = 14
+  ipsec_policy_name              = "${var.prefix}-ipsec-policy"
+  ipsec_encryption_algorithm     = "aes256"
+  ipsec_authentication_algorithm = "sha256"
+  ipsec_pfs                      = "group_14"
+
+  # Create Connection to Remote Peer
+  create_connection = true
+  connection_name   = "${var.prefix}-vpn-conn"
+  preshared_key     = var.preshared_key
+
+  # Peer Configuration (remote VPN gateway)
+  peer_config = [
+    {
+      address = var.remote_gateway_ip
+      ike_identity = [
+        {
+          type  = "ipv4_address"
+          value = var.remote_gateway_ip
+        }
+      ]
+    }
+  ]
+
+  # Local Configuration
+  local_config = [
+    {
+      ike_identities = [
+        {
+          type  = "fqdn"
+          value = "${var.prefix}.local.example.com"
+        },
+        {
+          type  = "fqdn"
+          value = "${var.prefix}.local.example.com"
+        }
+      ]
+    }
+  ]
+
+  # Routes to remote networks
+  create_routes = true
+  vpc_id        = ibm_is_vpc.vpc.id
+  routes = [
+    {
+      name        = "${var.prefix}-vpn-route"
+      zone        = "${var.region}-1"
+      destination = var.remote_cidr
+      action      = "delegate"
+      advertise   = false
+      priority    = 2
+    }
+  ]
+
+  # Create routing table
+  create_route_table               = true
+  routing_table_name               = "${var.prefix}-vpn-rt"
+  accept_routes_from_resource_type = ["vpn_gateway"]
+  route_vpc_zone_ingress           = true
 }

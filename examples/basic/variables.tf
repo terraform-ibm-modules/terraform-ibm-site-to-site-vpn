@@ -35,3 +35,13 @@ variable "preshared_key" {
   type        = string
   sensitive   = true
 }
+
+variable "remote_gateway_ip" {
+  type        = string
+  description = "An existing remote VPN gateway IP to connect with."
+}
+
+variable "remote_cidr" {
+  type        = string
+  description = "An existing destination CIDR to create route from VPN."
+}
