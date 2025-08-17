@@ -24,7 +24,7 @@ output "vpn_gateways" {
 
 output "vpn_connections" {
   description = "VPN connection information."
-  value       = module.site_to_site_vpn.vpn_connections
+  value       = module.site_to_site_vpn.vpn_connection
 }
 
 output "vpn_routes" {

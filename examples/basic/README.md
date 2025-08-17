@@ -11,3 +11,6 @@ that connects to an existing remote VPN gateway. This example will:
 - Create IKE and IPSec policies.
 - Create a VPN connection.
 - Create Routes for connection.
+
+> Please note:
+IBM Cloud may not show route table attachment if the VPN connection is down or if IKE/IPsec negotiation fails (PSK mismatch, CIDRs missing, peer not reachable). You will not see the actual routes until the tunnel is established.

@@ -17,26 +17,6 @@ module "vpn_policies" {
   ipsec_authentication_algorithm = var.ipsec_authentication_algorithm
   ipsec_pfs                      = var.ipsec_pfs
   ipsec_key_lifetime             = var.ipsec_key_lifetime
-  # lifecycle {
-  #   precondition {
-  #     condition = var.create_vpn_policies == false || (
-  #       var.ike_policy_name != null &&
-  #       var.ike_authentication_algorithm != null &&
-  #       var.ike_encryption_algorithm != null &&
-  #       var.ike_dh_group != null &&
-  #       var.ipsec_policy_name != null &&
-  #       var.ipsec_encryption_algorithm != null &&
-  #       var.ipsec_authentication_algorithm != null &&
-  #       var.ipsec_pfs != null
-  #     )
-  #     error_message = "When create_vpn_policies is true, all policy configuration variables must be provided."
-  #   }
-  # }
-}
-
-locals {
-  should_lookup_ipsec = !var.create_vpn_policies && var.existing_ipsec_policy_id == null && var.ipsec_policy_name != null
-  should_lookup_ike   = !var.create_vpn_policies && var.existing_ike_policy_id == null && var.ike_policy_name != null
 }
 
 ##############################################################################

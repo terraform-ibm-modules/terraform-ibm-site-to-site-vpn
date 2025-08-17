@@ -41,8 +41,7 @@ resource "ibm_is_vpc_routing_table_route" "vpn_route" {
     ibm_is_subnet_routing_table_attachment.attach_subnet
   ]
   for_each = {
-    for _, route in local.all_routes :
-    "${route.name}" => route
+    for _, route in local.all_routes : route.name => route
     if var.existing_route_table_id != null || var.create_route_table
   }
 
