@@ -18,7 +18,7 @@ This module automates the provisioning of a site-to-site VPN. For more informati
     * [vpn_policies](./modules/vpn_policies)
     * [vpn_routing](./modules/vpn_routing)
 * [Examples](./examples)
-    * [](./examples/advanced)
+    * [IBM Cloud Site-to-Site VPN Advanced Example](./examples/advanced)
     * [](./examples/basic)
 * [Contributing](#contributing)
 <!-- END OVERVIEW HOOK -->
@@ -101,13 +101,15 @@ Please refer [Planning considerations for VPN gateways](https://cloud.ibm.com/do
 
 ## Known Limitations
 
-* IBM permits **only one route‑based VPN gateway per zone per VPC.**
+* IBM permits **only one route‑based VPN gateway per zone per VPC.** For zone fault tolerance, deploy one VPN gateway per zone.
 * VPN gateway names must be unique within the VPC.
 * Gateway requires `/28` subnet and cannot share with other VPC.
-* If peer VPN gateway lacks a public IP, use **FQDN identity + DNS resolution** in VPC.
+* If peer VPN gateway lacks a public IP, use **FQDN identity** in VPC.
+* Peer subnets of a VPN gateway connection cannot overlap.
 * Peer address type is immutable — once set as FQDN or IP, it cannot be changed.
 * Route-based mode allows distribute_traffic = true to enable active‑active tunnels; policy‑based does not.
-* If peer is behind NAT, use establish_mode = "peer_only" and supply FQDN and identity overrides because identities must match expected values on negotiation.
+* If peer is behind NAT, use `establish_mode = "peer_only"` and supply FQDN and identity overrides because identities must match expected values on negotiation.
+* Creating a route in an ingress routing table with a VPN gateway connection as the next hop is not supported.
 
 Please refer [Known issues for VPN gateways](https://cloud.ibm.com/docs/vpc?topic=vpc-vpn-limitations) for more information.
 
@@ -141,8 +143,9 @@ provider "ibm" {
 }
 
 module "site_to_site_vpn" {
-  source = "./terraform-site-to-site-vpn"
-  existing_resource_group_name = "existing-rg"
+  source                       = "terraform-ibm-modules/site-to-site-vpn/ibm"
+  version                      = "X.X.X" # Replace "X.X.X" with a release version to lock into a specific release
+  resource_group_id            = "65xxxxxxxxxxxxxxxa3fd"
 
   # Use existing VPN gateway
   use_existing_vpn_gateway = true
@@ -190,36 +193,6 @@ You need the following permissions to run this module.
         - **Resource Group** \<your resource group>
         - `Viewer` resource group access
 
-<!-- PERMISSIONS REQUIRED TO RUN MODULE
-If this module requires permissions, uncomment the following block and update
-the sample permissions, following the format.
-Replace the 'Sample IBM Cloud' service and roles with applicable values.
-The required information can usually be found in the services official
-IBM Cloud documentation.
-To view all available service permissions, you can go in the
-console at Manage > Access (IAM) > Access groups and click into an existing group
-(or create a new one) and in the 'Access' tab click 'Assign access'.
--->
-
-<!--
-You need the following permissions to run this module:
-
-- Service
-    - **Resource group only**
-        - `Viewer` access on the specific resource group
-    - **Sample IBM Cloud** service
-        - `Editor` platform access
-        - `Manager` service access
--->
-
-<!-- NO PERMISSIONS FOR MODULE
-If no permissions are required for the module, uncomment the following
-statement instead the previous block.
--->
-
-<!-- No permissions are needed to run this module.-->
-
-
 <!-- The following content is automatically populated by the pre-commit hook -->
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ### Requirements
@@ -227,12 +200,13 @@ statement instead the previous block.
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
+| <a name="requirement_ibm"></a> [ibm](#requirement\_ibm) | >= 1.80.3, < 2.0.0 |
 
 ### Modules
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_vpn_connections"></a> [vpn\_connections](#module\_vpn\_connections) | ./modules/gateway_connection | n/a |
+| <a name="module_vpn_connection"></a> [vpn\_connection](#module\_vpn\_connection) | ./modules/gateway_connection | n/a |
 | <a name="module_vpn_gateway"></a> [vpn\_gateway](#module\_vpn\_gateway) | ./modules/gateway | n/a |
 | <a name="module_vpn_policies"></a> [vpn\_policies](#module\_vpn\_policies) | ./modules/vpn_policies | n/a |
 | <a name="module_vpn_routes"></a> [vpn\_routes](#module\_vpn\_routes) | ./modules/vpn_routing | n/a |
@@ -245,35 +219,66 @@ No resources.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_accept_routes_from_resource_type"></a> [accept\_routes\_from\_resource\_type](#input\_accept\_routes\_from\_resource\_type) | List of resource types allowed to create routes in this table. Example: 'vpn\_gateway', 'vpn\_server'. | `list(string)` | `[]` | no |
-| <a name="input_advertise_routes_to"></a> [advertise\_routes\_to](#input\_advertise\_routes\_to) | Ingress sources to which routes in this table (with advertise enabled) should be advertised. Allowed values: direct\_link, transit\_gateway. Requires corresponding ingress flag to be true. | `list(string)` | `[]` | no |
-| <a name="input_create_route_table"></a> [create\_route\_table](#input\_create\_route\_table) | Whether to create a new route table. Ignored if existing\_route\_table\_id is provided | `bool` | `true` | no |
-| <a name="input_existing_route_table_id"></a> [existing\_route\_table\_id](#input\_existing\_route\_table\_id) | ID of existing route table to use. If not provided, a new route table will be created | `string` | `null` | no |
-| <a name="input_ike_policies"></a> [ike\_policies](#input\_ike\_policies) | List of IKE policies to be created. | <pre>list(object({<br/>    name                     = string<br/>    resource_group           = optional(string)<br/>    ike_version              = optional(number, 2)<br/>    key_lifetime             = optional(number, 28800)<br/>    encryption_algorithm     = string<br/>    authentication_algorithm = string<br/>    dh_group                 = number<br/>  }))</pre> | `[]` | no |
-| <a name="input_ipsec_policies"></a> [ipsec\_policies](#input\_ipsec\_policies) | List of IPSec policies to be created. | <pre>list(object({<br/>    name                     = string<br/>    resource_group           = optional(string)<br/>    encryption_algorithm     = string<br/>    authentication_algorithm = string<br/>    pfs                      = string<br/>    key_lifetime             = optional(number, 3600)<br/>  }))</pre> | `[]` | no |
+| <a name="input_accept_routes_from_resource_type"></a> [accept\_routes\_from\_resource\_type](#input\_accept\_routes\_from\_resource\_type) | List of resource types allowed to create routes in this table. | `list(string)` | `[]` | no |
+| <a name="input_advertise_routes_to"></a> [advertise\_routes\_to](#input\_advertise\_routes\_to) | Ingress sources to which routes should be advertised. | `list(string)` | `[]` | no |
+| <a name="input_attach_subnet"></a> [attach\_subnet](#input\_attach\_subnet) | Whether to attach subnet to the VPN route table. | `bool` | `false` | no |
+| <a name="input_connection_name"></a> [connection\_name](#input\_connection\_name) | Name of the VPN connection. | `string` | `null` | no |
+| <a name="input_create_connection"></a> [create\_connection](#input\_create\_connection) | Whether to create a VPN connection. Set to false if only managing gateway/policies. | `bool` | `false` | no |
+| <a name="input_create_route_table"></a> [create\_route\_table](#input\_create\_route\_table) | Whether to create a new route table. | `bool` | `false` | no |
+| <a name="input_create_routes"></a> [create\_routes](#input\_create\_routes) | Whether to create VPN routes. | `bool` | `false` | no |
+| <a name="input_create_vpn_gateway"></a> [create\_vpn\_gateway](#input\_create\_vpn\_gateway) | Whether to create a new VPN Gateway. Set to false to use an existing gateway. | `bool` | `true` | no |
+| <a name="input_create_vpn_policies"></a> [create\_vpn\_policies](#input\_create\_vpn\_policies) | Whether to create a new IKE and IPSec policy. | `bool` | `false` | no |
+| <a name="input_dpd_action"></a> [dpd\_action](#input\_dpd\_action) | Action when peer is unresponsive: 'restart', 'clear', 'hold', or 'none'. | `string` | `"restart"` | no |
+| <a name="input_dpd_check_interval"></a> [dpd\_check\_interval](#input\_dpd\_check\_interval) | Dead peer detection check interval in seconds. | `number` | `2` | no |
+| <a name="input_dpd_max_timeout"></a> [dpd\_max\_timeout](#input\_dpd\_max\_timeout) | Dead peer detection timeout in seconds. | `number` | `10` | no |
+| <a name="input_enable_distribute_traffic"></a> [enable\_distribute\_traffic](#input\_enable\_distribute\_traffic) | Enable traffic distribution across active tunnels for route-based VPN. | `bool` | `false` | no |
+| <a name="input_establish_mode"></a> [establish\_mode](#input\_establish\_mode) | IKE negotiation behavior. 'bidirectional' allows both sides to initiate, 'peer\_only' restricts to peer side. | `string` | `"bidirectional"` | no |
+| <a name="input_existing_ike_policy_id"></a> [existing\_ike\_policy\_id](#input\_existing\_ike\_policy\_id) | ID of existing IKE policy to use instead of creating new one. | `string` | `null` | no |
+| <a name="input_existing_ipsec_policy_id"></a> [existing\_ipsec\_policy\_id](#input\_existing\_ipsec\_policy\_id) | ID of existing IPSec policy to use instead of creating new one. | `string` | `null` | no |
+| <a name="input_existing_route_table_id"></a> [existing\_route\_table\_id](#input\_existing\_route\_table\_id) | ID of existing route table to use. | `string` | `null` | no |
+| <a name="input_existing_vpn_gateway_id"></a> [existing\_vpn\_gateway\_id](#input\_existing\_vpn\_gateway\_id) | ID of existing VPN Gateway to use. Required if create\_vpn\_gateway is false and vpn\_gateway\_name is not provided. | `string` | `null` | no |
+| <a name="input_ike_authentication_algorithm"></a> [ike\_authentication\_algorithm](#input\_ike\_authentication\_algorithm) | The authentication algorithm used in the IKE policy. Valid values: sha256, sha384, sha512. | `string` | `null` | no |
+| <a name="input_ike_dh_group"></a> [ike\_dh\_group](#input\_ike\_dh\_group) | The Diffie-Hellman group to use. Valid values: 14 to 24, or 31. | `number` | `null` | no |
+| <a name="input_ike_encryption_algorithm"></a> [ike\_encryption\_algorithm](#input\_ike\_encryption\_algorithm) | The encryption algorithm used in the IKE policy. Valid values: aes128, aes192, aes256. | `string` | `null` | no |
+| <a name="input_ike_key_lifetime"></a> [ike\_key\_lifetime](#input\_ike\_key\_lifetime) | The key lifetime in seconds. Must be between 1800 and 86400. | `number` | `28800` | no |
+| <a name="input_ike_policy_name"></a> [ike\_policy\_name](#input\_ike\_policy\_name) | Name of the IKE policy to create. | `string` | `null` | no |
+| <a name="input_ike_version"></a> [ike\_version](#input\_ike\_version) | The IKE protocol version to use. Valid values: 1 or 2. | `number` | `2` | no |
+| <a name="input_ipsec_authentication_algorithm"></a> [ipsec\_authentication\_algorithm](#input\_ipsec\_authentication\_algorithm) | The authentication algorithm for the IPSec policy. Valid values: sha256, sha384, sha512, disabled. | `string` | `null` | no |
+| <a name="input_ipsec_encryption_algorithm"></a> [ipsec\_encryption\_algorithm](#input\_ipsec\_encryption\_algorithm) | The encryption algorithm for the IPSec policy. Valid values: aes128, aes192, aes256, aes128gcm16, aes192gcm16, aes256gcm16. | `string` | `null` | no |
+| <a name="input_ipsec_key_lifetime"></a> [ipsec\_key\_lifetime](#input\_ipsec\_key\_lifetime) | The key lifetime for the IPSec policy in seconds. Must be between 300 and 86400. | `number` | `3600` | no |
+| <a name="input_ipsec_pfs"></a> [ipsec\_pfs](#input\_ipsec\_pfs) | The Perfect Forward Secrecy (PFS) protocol for the IPSec policy. Valid values: disabled, group\_2, group\_5, group\_14. | `string` | `null` | no |
+| <a name="input_ipsec_policy_name"></a> [ipsec\_policy\_name](#input\_ipsec\_policy\_name) | Name of the IPSec policy to create. | `string` | `null` | no |
+| <a name="input_is_admin_state_up"></a> [is\_admin\_state\_up](#input\_is\_admin\_state\_up) | Administrative state of the VPN connection. | `bool` | `true` | no |
+| <a name="input_local_config"></a> [local\_config](#input\_local\_config) | Local configuration for the VPN connection. | <pre>list(object({<br/>    ike_identities = list(object({<br/>      type  = string<br/>      value = optional(string)<br/>    }))<br/>  }))</pre> | `[]` | no |
+| <a name="input_peer_config"></a> [peer\_config](#input\_peer\_config) | Peer configuration for the VPN connection. | <pre>list(object({<br/>    address = optional(string)<br/>    fqdn    = optional(string)<br/>    cidrs   = optional(list(string), [])<br/>    ike_identity = list(object({<br/>      type  = string<br/>      value = optional(string)<br/>    }))<br/>  }))</pre> | `[]` | no |
+| <a name="input_preshared_key"></a> [preshared\_key](#input\_preshared\_key) | Pre-shared key for the VPN connection. | `string` | `null` | no |
 | <a name="input_resource_group_id"></a> [resource\_group\_id](#input\_resource\_group\_id) | The ID of the resource group to use where you want to create the VPN gateway. | `string` | n/a | yes |
-| <a name="input_route_direct_link_ingress"></a> [route\_direct\_link\_ingress](#input\_route\_direct\_link\_ingress) | If true, allows routing table to route traffic from Direct Link into the VPC. | `bool` | `false` | no |
-| <a name="input_route_internet_ingress"></a> [route\_internet\_ingress](#input\_route\_internet\_ingress) | If true, allows routing table to route traffic that originates from the Internet. | `bool` | `false` | no |
-| <a name="input_route_transit_gateway_ingress"></a> [route\_transit\_gateway\_ingress](#input\_route\_transit\_gateway\_ingress) | If true, allows routing table to route traffic from Transit Gateway into the VPC. | `bool` | `false` | no |
-| <a name="input_route_vpc_zone_ingress"></a> [route\_vpc\_zone\_ingress](#input\_route\_vpc\_zone\_ingress) | If true, allows routing table to route traffic from other zones within the VPC. | `bool` | `false` | no |
-| <a name="input_routing_table_name"></a> [routing\_table\_name](#input\_routing\_table\_name) | Name of the routing table to create. Only needed when create\_route\_table is true. | `string` | `null` | no |
+| <a name="input_route_direct_link_ingress"></a> [route\_direct\_link\_ingress](#input\_route\_direct\_link\_ingress) | Allow routing from Direct Link. | `bool` | `false` | no |
+| <a name="input_route_internet_ingress"></a> [route\_internet\_ingress](#input\_route\_internet\_ingress) | Allow routing from Internet. | `bool` | `false` | no |
+| <a name="input_route_transit_gateway_ingress"></a> [route\_transit\_gateway\_ingress](#input\_route\_transit\_gateway\_ingress) | Allow routing from Transit Gateway. | `bool` | `false` | no |
+| <a name="input_route_vpc_zone_ingress"></a> [route\_vpc\_zone\_ingress](#input\_route\_vpc\_zone\_ingress) | Allow routing from other zones within the VPC. | `bool` | `false` | no |
+| <a name="input_routes"></a> [routes](#input\_routes) | List of routes to create. | <pre>list(object({<br/>    name        = string<br/>    zone        = string<br/>    destination = string<br/>    action      = optional(string, "delegate")<br/>    advertise   = optional(bool, false)<br/>    priority    = optional(number, 2)<br/>  }))</pre> | `[]` | no |
+| <a name="input_routing_table_name"></a> [routing\_table\_name](#input\_routing\_table\_name) | Name of the routing table to create. | `string` | `null` | no |
+| <a name="input_subnet_id"></a> [subnet\_id](#input\_subnet\_id) | Subnet ID to attach to the routing table. | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | List of Tags for the resource created | `list(string)` | `null` | no |
-| <a name="input_use_existing_ike_policy"></a> [use\_existing\_ike\_policy](#input\_use\_existing\_ike\_policy) | If true, use pre-created IKE policy IDs instead of creating new ones. | `bool` | `false` | no |
-| <a name="input_use_existing_ipsec_policy"></a> [use\_existing\_ipsec\_policy](#input\_use\_existing\_ipsec\_policy) | If true, use pre-created IPSec policy IDs instead of creating new ones. | `bool` | `false` | no |
-| <a name="input_use_existing_vpn_gateway"></a> [use\_existing\_vpn\_gateway](#input\_use\_existing\_vpn\_gateway) | If true, use a pre-existing VPN Gateway. | `bool` | `false` | no |
-| <a name="input_vpn_connections"></a> [vpn\_connections](#input\_vpn\_connections) | List of VPN gateway connections to be created. | <pre>list(object({<br/>    vpn_gateway_name            = optional(string)<br/>    vpn_gateway_id              = optional(string)<br/>    ike_policy_name             = optional(string)<br/>    ipsec_policy_name           = optional(string)<br/>    ike_policy_id               = optional(string)<br/>    ipsec_policy_id             = optional(string)<br/>    vpn_gateway_connection_name = string<br/>    preshared_key               = string<br/>    establish_mode              = optional(string, "bidirectional")<br/>    enable_distribute_traffic   = optional(bool, false)<br/>    is_admin_state_up           = optional(bool, false)<br/>    peer = optional(list(object({<br/>      address = optional(string)<br/>      fqdn    = optional(string)<br/>      ike_identity = list(object({<br/>        type  = string<br/>        value = optional(string)<br/>      }))<br/>    })), [])<br/>    local = optional(list(object({<br/>      ike_identities = list(object({<br/>        type  = string<br/>        value = optional(string)<br/>      }))<br/>    })), [])<br/>    dpd_action         = optional(string, "restart")<br/>    dpd_check_interval = optional(number, 2)<br/>    dpd_max_timeout    = optional(number, 10)<br/>  }))</pre> | n/a | yes |
-| <a name="input_vpn_gateways"></a> [vpn\_gateways](#input\_vpn\_gateways) | List of VPN gateways to create. | <pre>list(<br/>    object({<br/>      name              = string<br/>      subnet_id         = string<br/>      mode              = optional(string)<br/>      resource_group_id = optional(string)<br/>      tags              = optional(list(string), [])<br/>    })<br/>  )</pre> | `[]` | no |
-| <a name="input_vpn_routes"></a> [vpn\_routes](#input\_vpn\_routes) | List of routes to create in the table. | <pre>list(object({<br/>    name             = string<br/>    zone             = string<br/>    vpc_id           = string<br/>    destination      = string<br/>    next_hop         = string<br/>    vpn_gateway_name = optional(string)<br/>    action           = optional(string, "delegate")<br/>    advertise        = optional(bool, false)<br/>    priority         = optional(number, 2)<br/>  }))</pre> | `[]` | no |
+| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | VPC ID where routes will be created. | `string` | `null` | no |
+| <a name="input_vpn_gateway_mode"></a> [vpn\_gateway\_mode](#input\_vpn\_gateway\_mode) | Mode of the VPN gateway (route or policy). | `string` | `"route"` | no |
+| <a name="input_vpn_gateway_name"></a> [vpn\_gateway\_name](#input\_vpn\_gateway\_name) | Name of the VPN gateway to create. Required if create\_vpn\_gateway is true. | `string` | `null` | no |
+| <a name="input_vpn_gateway_subnet_id"></a> [vpn\_gateway\_subnet\_id](#input\_vpn\_gateway\_subnet\_id) | Subnet ID where VPN gateway will be created. Required if create\_vpn\_gateway is true. | `string` | `null` | no |
 
 ### Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_ike_policies"></a> [ike\_policies](#output\_ike\_policies) | List of IKE Policies. |
-| <a name="output_ipsec_policies"></a> [ipsec\_policies](#output\_ipsec\_policies) | List of IPSec Policies. |
-| <a name="output_vpn_connections"></a> [vpn\_connections](#output\_vpn\_connections) | List of VPN connections. |
-| <a name="output_vpn_gateways"></a> [vpn\_gateways](#output\_vpn\_gateways) | List of VPN gateways. |
-| <a name="output_vpn_route_tables"></a> [vpn\_route\_tables](#output\_vpn\_route\_tables) | VPN routing tables created. |
+| <a name="output_ike_policy"></a> [ike\_policy](#output\_ike\_policy) | Map of newly created IKE policy. |
+| <a name="output_ike_policy_id"></a> [ike\_policy\_id](#output\_ike\_policy\_id) | ID of the IKE policy (created, existing, or looked up). |
+| <a name="output_ipsec_policy"></a> [ipsec\_policy](#output\_ipsec\_policy) | Map of newly created IPSec policy. |
+| <a name="output_ipsec_policy_id"></a> [ipsec\_policy\_id](#output\_ipsec\_policy\_id) | ID of the IPSec policy (created, existing, or looked up). |
+| <a name="output_vpn_connection"></a> [vpn\_connection](#output\_vpn\_connection) | VPN connection information. |
+| <a name="output_vpn_gateway"></a> [vpn\_gateway](#output\_vpn\_gateway) | VPN gateway information. |
+| <a name="output_vpn_gateway_id"></a> [vpn\_gateway\_id](#output\_vpn\_gateway\_id) | ID of the VPN gateway (created or used). |
+| <a name="output_vpn_gateway_public_ip"></a> [vpn\_gateway\_public\_ip](#output\_vpn\_gateway\_public\_ip) | Public IP address of the VPN gateway created. |
+| <a name="output_vpn_routes"></a> [vpn\_routes](#output\_vpn\_routes) | VPN routing information. |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 
 <!-- Leave this section as is so that your module has a link to local development environment set-up steps for contributors to follow -->

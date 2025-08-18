@@ -254,6 +254,7 @@ resource "ibm_is_instance" "vsi_site_a" {
   resource_group = module.resource_group.resource_group_id
   zone           = "${var.region_site_a}-1"
   keys           = [ibm_is_ssh_key.public_key_site_a.id]
+  user_data      = file("./scripts/userdata.sh")
 }
 
 resource "ibm_is_instance" "vsi_site_b" {
@@ -275,12 +276,14 @@ resource "ibm_is_instance" "vsi_site_b" {
   resource_group = module.resource_group.resource_group_id
   zone           = "${var.region_site_b}-1"
   keys           = [ibm_is_ssh_key.public_key_site_b.id]
+  user_data      = file("./scripts/userdata.sh")
 }
 
 ##############################################################################
 # Floating IPs
 ##############################################################################
 
+# Added floating IP to manually login to site A and connect to site B.
 resource "ibm_is_floating_ip" "floating_ip_vsi_site_a" {
   provider = ibm.site_a
   name     = "${var.prefix}-fip-site-a"

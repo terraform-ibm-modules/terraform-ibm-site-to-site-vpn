@@ -59,3 +59,9 @@ output "vpn_routes_site_b" {
   description = "VPN routing information for site B."
   value       = module.site_b_to_site_a.vpn_routes
 }
+
+output "private_key" {
+  description = "Commonly used SSH private key for both the sites."
+  value       = tls_private_key.ssh_key.private_key_pem
+  sensitive   = true
+}

@@ -204,30 +204,3 @@ module "site_b_to_site_a" {
 }
 
 ##############################################################################
-# Test Connectivity
-##############################################################################
-
-resource "terraform_data" "test_vsi_communication" {
-  depends_on = [module.site_a_to_site_b, module.site_b_to_site_a]
-
-  input = {
-    public_ip_site_a = ibm_is_floating_ip.floating_ip_vsi_site_a.address
-    public_ip_site_b = ibm_is_floating_ip.floating_ip_vsi_site_b.address
-    pvt_ip_site_a    = ibm_is_instance.vsi_site_a[0].primary_network_attachment[0].primary_ip[0].address
-    pvt_ip_site_b    = ibm_is_instance.vsi_site_b[0].primary_network_attachment[0].primary_ip[0].address
-    ssh_key          = tls_private_key.ssh_key.private_key_pem
-  }
-
-  provisioner "local-exec" {
-    command     = <<EOF
-      key_file=$(mktemp)
-      echo "${self.input.ssh_key}" > "$key_file"
-      chmod 600 "$key_file"
-      ./scripts/test_connectivity.sh "${self.input.public_ip_site_a}" "${self.input.public_ip_site_b}" "${self.input.pvt_ip_site_a}" "${self.input.pvt_ip_site_b}" "$key_file"
-      rm -f "$key_file"
-    EOF
-    interpreter = ["/bin/bash", "-c"]
-  }
-}
-
-##############################################################################
