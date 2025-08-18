@@ -141,43 +141,91 @@ provider "ibm" {
   ibmcloud_api_key = "XXXXXXXXXX"  # replace with apikey value
   region           = local.region
 }
+# Step 1: First create VPN Gateway
+module "vpn_gateway" {
+  source                         = "terraform-ibm-modules/site-to-site-vpn/ibm"
+  version                      = "X.X.X" # Replace "X.X.X" with a release version to lock into a specific release
+  resource_group_id            = "65xxxxxxxxxxxxxxxa3fd"
+  create_vpn_gateway             = true
+  tags                           = var.tags
+  vpn_gateway_name               = "xxxxx" # Name of the VPN Gateway
+  vpn_gateway_subnet_id          = "s..12" # Subnet id where VPN Gateway will be created
+  vpn_gateway_mode               = "route" # Can be route or policy
+  create_vpn_policies            = true
+  ike_policy_name                = "xxx-ike-policy" # Name of the IKE Policy
+  ike_authentication_algorithm   = "sha256" # Choose the relevant authentication algorithm
+  ike_encryption_algorithm       = "aes256" # Choose the relevant encryption algorithm
+  ike_dh_group                   = 14 # Provide valid Diffie-Hellman group.
+  ipsec_policy_name              = "xxx-ipsec-policy" # Name of the IPSec Policy
+  ipsec_authentication_algorithm = "sha256" # Choose the relevant authentication algorithm
+  ipsec_encryption_algorithm     = "aes256" # Choose the relevant encryption algorithm
+  ipsec_pfs                      = "group_14" # Perfect Forward Secrecy (PFS) protocol value
+}
 
+# Step 2: Create VPN connections once VPN Gateway is provisioned
 module "site_to_site_vpn" {
   source                       = "terraform-ibm-modules/site-to-site-vpn/ibm"
   version                      = "X.X.X" # Replace "X.X.X" with a release version to lock into a specific release
   resource_group_id            = "65xxxxxxxxxxxxxxxa3fd"
 
-  # Use existing VPN gateway
-  use_existing_vpn_gateway = true
+  create_vpn_gateway       = false
+  existing_vpn_gateway_id  = module.vpn_gateway.vpn_gateway_id # use the VPN gateway id created as part of step 1 above.
+  create_vpn_policies      = false
+  existing_ike_policy_id   = module.vpn_gateway.ike_policy_id # use the IKE policy id created as part of step 1 above.
+  existing_ipsec_policy_id = module.vpn_gateway.ipsec_policy_id # use the IPSec policy id created as part of step 1 above.
 
-  # Use existing policies
-  use_existing_ike_policies    = true
-  use_existing_ipsec_policies  = true
+  # Create Connection to Remote Peer
+  create_connection = true
+  connection_name   = "xxx-vpn-conn" # VPN Connection name
+  preshared_key     = "XXXXXX"
 
-  vpn_connections = [
+  # Peer Configuration (remote VPN gateway)
+  peer_config = [
     {
-      vpn_gateway_connection_name = "existing-gateway-connection"
-      vpn_gateway_id             = "vpn-gateway-existing-id"
-      ike_policy_id              = "ike-policy-existing-id"
-      ipsec_policy_id            = "ipsec-policy-existing-id"
-      preshared_key              = var.existing_preshared_key
-
-      peer = [
+      address = "X.X.X.X" # Remote Gateway IP address
+      ike_identity = [
         {
-          fqdn = "remote-peer.readme.com"
-          ike_identity = [
-            {
-              type  = "fqdn"
-              value = "remote-peer.readme.com"
-            }
-          ]
+          type  = "ipv4_address"
+          value = "X.X.X.X" # Remote Gateway IP address
+        }
+      ]
+    }
+  ]
+  # Local Configuration
+  local_config = [
+    {
+      # Minimum of 2 IKE Identities are required
+      ike_identities = [
+        {
+          type  = "ipv4_address"
+          value = module.vpn_gateway.vpn_gateway_public_ip # Use the VPN gateway id created as part of step 1 above.
+        },
+        {
+          type  = "ipv4_address"
+          value = module.vpn_gateway.vpn_gateway_public_ip # Use the VPN gateway id created as part of step 1 above.
         }
       ]
     }
   ]
 
-  use_existing_routing_table = true
-  routing_table_id = "routing-table-existing-id"
+  # Once VPN Connection is completed, we will advance to creating routing table and routes
+  create_route_table               = true
+  routing_table_name               = "xxx-rt" # Name of Routing Table
+  accept_routes_from_resource_type = ["vpn_gateway"]
+  attach_subnet                    = true
+  subnet_id                        = "s...123" # Subnet id where VPN Gateway is created
+  # Add routes
+  create_routes = true
+  vpc_id        = "vpc-xxxx" # Provide VPC Id.
+  routes = [
+    {
+      name             = "example-vpn-route-1"
+      vpn_gateway_name = "xxxxx" # Name of the VPN Gateway
+      zone             = "zone-1"
+      next_hop         = module.vpn_gateway.vpn_gateway_id
+      destination      = "X.X.X.X" # Provide Remote CIDR
+    }
+  ]
 }
 
 ```
