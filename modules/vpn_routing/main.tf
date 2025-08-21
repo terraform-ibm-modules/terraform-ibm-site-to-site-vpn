@@ -27,7 +27,7 @@ resource "ibm_is_vpc_routing_table" "vpn_routing_table" {
 # Attach Subnets to Routing Table
 ########################################
 resource "ibm_is_subnet_routing_table_attachment" "attach_subnet" {
-  count         = var.attach_subnet ? 1 : 0
+  count         = var.route_attach_subnet ? 1 : 0
   routing_table = local.route_table_id
   subnet        = var.subnet_id_to_attach
 }

@@ -93,7 +93,8 @@ variable "peer_config" {
       value = optional(string)
     }))
   }))
-  default = []
+  default  = []
+  nullable = false
 
   validation {
     condition     = length(var.peer_config) == 0 || length(var.peer_config) == 1
@@ -348,18 +349,18 @@ variable "route_internet_ingress" {
   default     = false
 }
 
-variable "attach_subnet" {
+variable "route_attach_subnet" {
   description = "Whether to attach subnet to the VPN route table."
   type        = bool
   default     = false
 }
 
-variable "subnet_id" {
+variable "route_subnet_id" {
   description = "Subnet ID to attach to the routing table."
   type        = string
   default     = null
   validation {
-    condition     = !var.attach_subnet || var.subnet_id != null
-    error_message = "When attach_subnet is true, you must provide a valid subnet ID."
+    condition     = !var.route_attach_subnet || var.route_subnet_id != null
+    error_message = "When route_attach_subnet is true, you must provide a valid subnet ID."
   }
 }

@@ -130,8 +130,8 @@ module "site_a_to_site_b" {
   create_route_table               = true
   accept_routes_from_resource_type = ["vpn_gateway"]
   routing_table_name               = local.route_table_site_a_to_site_b
-  attach_subnet                    = true
-  subnet_id                        = ibm_is_subnet.subnet_site_a.id
+  route_attach_subnet              = true
+  route_subnet_id                  = ibm_is_subnet.subnet_site_a.id
 }
 
 module "site_b_to_site_a" {
@@ -199,8 +199,8 @@ module "site_b_to_site_a" {
   create_route_table               = true
   accept_routes_from_resource_type = ["vpn_gateway"]
   routing_table_name               = local.route_table_site_b_to_site_a
-  attach_subnet                    = true
-  subnet_id                        = ibm_is_subnet.subnet_site_b.id
+  route_attach_subnet              = true
+  route_subnet_id                  = ibm_is_subnet.subnet_site_b.id
 }
 
 ##############################################################################

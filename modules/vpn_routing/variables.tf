@@ -108,7 +108,7 @@ variable "route_internet_ingress" {
   default     = false
 }
 
-variable "attach_subnet" {
+variable "route_attach_subnet" {
   description = "Whether to attach subnet to the VPN route table."
   type        = bool
   default     = false
@@ -120,8 +120,8 @@ variable "subnet_id_to_attach" {
   default     = null
 
   validation {
-    condition     = !var.attach_subnet || var.subnet_id_to_attach != null
-    error_message = "When attach_subnet is true, you must provide a valid subnet ID."
+    condition     = !var.route_attach_subnet || var.subnet_id_to_attach != null
+    error_message = "When route_attach_subnet is true, you must provide a valid subnet ID."
   }
 }
 

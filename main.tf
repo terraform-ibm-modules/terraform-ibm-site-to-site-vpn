@@ -91,8 +91,8 @@ module "vpn_routes" {
   existing_route_table_id = var.existing_route_table_id
   create_route_table      = var.create_route_table
   routing_table_name      = var.routing_table_name
-  attach_subnet           = var.attach_subnet
-  subnet_id_to_attach     = var.subnet_id
+  route_attach_subnet     = var.route_attach_subnet
+  subnet_id_to_attach     = var.route_subnet_id
   vpn_routes = [
     for route in var.routes : {
       name        = route.name

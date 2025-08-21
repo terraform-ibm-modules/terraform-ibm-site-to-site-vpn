@@ -117,8 +117,8 @@ module "site_to_site_vpn" {
   create_route_table               = true
   routing_table_name               = "${var.prefix}-vpn-rt"
   accept_routes_from_resource_type = ["vpn_gateway"]
-  attach_subnet                    = true
-  subnet_id                        = local.subnet_id
+  route_attach_subnet              = true
+  route_subnet_id                  = local.subnet_id
 
   # Add routes
   create_routes = true
