@@ -51,7 +51,7 @@ locals {
   vpn_gw_name         = "${var.prefix}-vpn-gateway"
 }
 
-module "vpn_gateway" {
+module "vpn_gateway_single_site" {
   source                         = "../.."
   resource_group_id              = module.resource_group.resource_group_id
   create_vpn_gateway             = true
@@ -59,6 +59,9 @@ module "vpn_gateway" {
   vpn_gateway_name               = local.vpn_gw_name
   vpn_gateway_subnet_id          = local.subnet_id
   vpn_gateway_mode               = "route"
+
+  # Policies
+
   create_vpn_policies            = true
   ike_policy_name                = "${var.prefix}-ike-policy"
   ike_authentication_algorithm   = local.authentication_algo
@@ -68,21 +71,10 @@ module "vpn_gateway" {
   ipsec_encryption_algorithm     = local.encryption_algo
   ipsec_authentication_algorithm = local.authentication_algo
   ipsec_pfs                      = "group_14"
-}
-
-module "site_to_site_vpn" {
-  source                   = "../.."
-  depends_on               = [module.vpn_gateway]
-  resource_group_id        = module.resource_group.resource_group_id
-  create_vpn_gateway       = false
-  existing_vpn_gateway_id  = module.vpn_gateway.vpn_gateway_id
-  create_vpn_policies      = false
-  existing_ike_policy_id   = module.vpn_gateway.ike_policy_id
-  existing_ipsec_policy_id = module.vpn_gateway.ipsec_policy_id
 
   # Create Connection to Remote Peer
-  create_connection = true
-  connection_name   = "${var.prefix}-vpn-conn"
+
+  vpn_gateway_connection_name   = "${var.prefix}-vpn-conn"
   preshared_key     = var.preshared_key
 
   # Peer Configuration (remote VPN gateway)
@@ -103,11 +95,11 @@ module "site_to_site_vpn" {
       ike_identities = [
         {
           type  = "ipv4_address"
-          value = module.vpn_gateway.vpn_gateway_public_ip
+          value =module.vpn_gateway_single_site.vpn_gateway_public_ip
         },
         {
           type  = "ipv4_address"
-          value = module.vpn_gateway.vpn_gateway_public_ip
+          value =module.vpn_gateway_single_site.vpn_gateway_public_ip
         }
       ]
     }
@@ -128,7 +120,7 @@ module "site_to_site_vpn" {
       name             = "${var.prefix}-vpn-route"
       vpn_gateway_name = local.vpn_gw_name
       zone             = local.zone
-      next_hop         = module.vpn_gateway.vpn_gateway_id
+      next_hop         = module.vpn_gateway_single_site.vpn_gateway_id
       destination      = var.remote_cidr
     }
   ]

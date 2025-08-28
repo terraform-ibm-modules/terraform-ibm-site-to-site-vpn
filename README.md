@@ -16,8 +16,8 @@ This module automates the provisioning of a site-to-site VPN. For more informati
     * [vpn_policies](./modules/vpn_policies)
     * [vpn_routing](./modules/vpn_routing)
 * [Examples](./examples)
-    * [IBM Cloud Site-to-Site VPN Advanced Example](./examples/advanced)
-    * [](./examples/basic)
+    * [VPC to VPC Example](./examples/vpc-to-vpc)
+    * [](./examples/single-site)
 * [Contributing](#contributing)
 <!-- END OVERVIEW HOOK -->
 
@@ -139,11 +139,11 @@ provider "ibm" {
   ibmcloud_api_key = "XXXXXXXXXX"  # replace with apikey value
   region           = local.region
 }
-# Step 1: First create VPN Gateway
-module "vpn_gateway" {
+
+module "site_to_site_vpn" {
   source                         = "terraform-ibm-modules/site-to-site-vpn/ibm"
-  version                      = "X.X.X" # Replace "X.X.X" with a release version to lock into a specific release
-  resource_group_id            = "65xxxxxxxxxxxxxxxa3fd"
+  version                        = "X.X.X" # Replace "X.X.X" with a release version to lock into a specific release
+  resource_group_id              = "65xxxxxxxxxxxxxxxa3fd"
   create_vpn_gateway             = true
   tags                           = var.tags
   vpn_gateway_name               = "xxxxx" # Name of the VPN Gateway
@@ -158,23 +158,9 @@ module "vpn_gateway" {
   ipsec_authentication_algorithm = "sha256" # Choose the relevant authentication algorithm
   ipsec_encryption_algorithm     = "aes256" # Choose the relevant encryption algorithm
   ipsec_pfs                      = "group_14" # Perfect Forward Secrecy (PFS) protocol value
-}
-
-# Step 2: Create VPN connections once VPN Gateway is provisioned
-module "site_to_site_vpn" {
-  source                       = "terraform-ibm-modules/site-to-site-vpn/ibm"
-  version                      = "X.X.X" # Replace "X.X.X" with a release version to lock into a specific release
-  resource_group_id            = "65xxxxxxxxxxxxxxxa3fd"
-
-  create_vpn_gateway       = false
-  existing_vpn_gateway_id  = module.vpn_gateway.vpn_gateway_id # use the VPN gateway id created as part of step 1 above.
-  create_vpn_policies      = false
-  existing_ike_policy_id   = module.vpn_gateway.ike_policy_id # use the IKE policy id created as part of step 1 above.
-  existing_ipsec_policy_id = module.vpn_gateway.ipsec_policy_id # use the IPSec policy id created as part of step 1 above.
 
   # Create Connection to Remote Peer
-  create_connection = true
-  connection_name   = "xxx-vpn-conn" # VPN Connection name
+  vpn_gateway_connection_name   = "xxx-vpn-conn" # VPN Connection name
   preshared_key     = "XXXXXX"
 
   # Peer Configuration (remote VPN gateway)
@@ -196,17 +182,17 @@ module "site_to_site_vpn" {
       ike_identities = [
         {
           type  = "ipv4_address"
-          value = module.vpn_gateway.vpn_gateway_public_ip # Use the VPN gateway id created as part of step 1 above.
+          value = module.vpn_gateway.vpn_gateway_public_ip # Use the VPN gateway id
         },
         {
           type  = "ipv4_address"
-          value = module.vpn_gateway.vpn_gateway_public_ip # Use the VPN gateway id created as part of step 1 above.
+          value = module.vpn_gateway.vpn_gateway_public_ip # Use the VPN gateway id
         }
       ]
     }
   ]
 
-  # Once VPN Connection is completed, we will advance to creating routing table and routes
+  # Routing table and Routes creation
   create_route_table               = true
   routing_table_name               = "xxx-rt" # Name of Routing Table
   accept_routes_from_resource_type = ["vpn_gateway"]
@@ -220,7 +206,7 @@ module "site_to_site_vpn" {
       name             = "example-vpn-route-1"
       vpn_gateway_name = "xxxxx" # Name of the VPN Gateway
       zone             = "zone-1"
-      next_hop         = module.vpn_gateway.vpn_gateway_id
+      next_hop         = module.site_to_site_vpn.vpn_gateway_id
       destination      = "X.X.X.X" # Provide Remote CIDR
     }
   ]
