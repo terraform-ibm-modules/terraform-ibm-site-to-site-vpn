@@ -11,16 +11,19 @@ variable "ibmcloud_api_key" {
 variable "region_site_a" {
   type        = string
   description = "IBM Cloud region to provision all resources in Site A."
+  default     = "eu-de"
 }
 
 variable "region_site_b" {
   type        = string
   description = "IBM Cloud region to provision all resources in Site B."
+  default     = "eu-es"
 }
 
 variable "prefix" {
   type        = string
   description = "A string value to prefix to all resources created by this example."
+  default     = "vpc-to-vpc"
 }
 
 variable "resource_group" {
@@ -38,5 +41,6 @@ variable "resource_tags" {
 variable "preshared_key" {
   description = "VPN connection pre-shared key (secret)"
   type        = string
+  default     = "somestring"
   sensitive   = true
 }

@@ -31,6 +31,12 @@ locals {
       protocol = "tcp"
       port_min = 22
       port_max = 22
+      remote   = "0.0.0.0/0" # Allow public ssh for testing purpose. This CIDR can be restricted to the IP address of the machine ssh-ing to the VSI in site A through its floating ip.
+    },
+    {
+      protocol = "tcp"
+      port_min = 22
+      port_max = 22
       remote   = local.cidr_block_site_b
     },
     {
