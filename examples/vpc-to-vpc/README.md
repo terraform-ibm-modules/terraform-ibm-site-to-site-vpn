@@ -1,4 +1,4 @@
-# IBM Cloud Site-to-Site VPN Advanced Example
+# VPC to VPC Example
 
 This Terraform-based example deploys two independent VPC environments ("Site A" and "Site B") in different IBM Cloud regions, with VPN gateways connecting them bidirectionally. Each site includes the following resources:
 
@@ -10,5 +10,3 @@ This Terraform-based example deploys two independent VPC environments ("Site A" 
 - VPN Gateway + IKE/IPsec Policies
 - VPN Connection (Site A <---> Site B)
 - Custom routes in each VPCs' routing table
-
-Once all resources are provisioned, the connectivity between the two VSIs is tested by pinging VSI in Site B from Site A and vice versa.
