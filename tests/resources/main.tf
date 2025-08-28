@@ -8,7 +8,7 @@ module "resource_group" {
 }
 
 ##############################################################################
-# Provision VPC 
+# Provision VPC
 ##############################################################################
 
 
@@ -37,7 +37,7 @@ resource "ibm_is_subnet" "subnet_zone_1" {
 }
 
 ##############################################################################
-# Provision VPN Gateway to serve as remote VPN Gateway 
+# Provision VPN Gateway to serve as remote VPN Gateway
 ###########################################################################
 
 resource "ibm_is_vpn_gateway" "remote_vpn_gateway" {
