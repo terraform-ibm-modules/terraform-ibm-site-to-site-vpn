@@ -1,3 +1,10 @@
 {
-    "scc_rules": []
+    "scc_rules": [
+        {
+            "scc_rule_id": "rule-d8d13c3e-5ca0-46c5-a055-2475852c4ec6",
+            "description": "Check whether VPN for VPC authentication is configured with a strong pre-shared key with at least # characters",
+            "ignore_reason": "Ignoring the rule as there is no criteria mentioned in the documentation. Hence ignoring this rule.",
+            "is_valid": true
+        }
+    ]
 }
