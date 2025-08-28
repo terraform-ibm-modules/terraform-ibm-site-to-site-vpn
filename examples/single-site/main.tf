@@ -52,13 +52,13 @@ locals {
 }
 
 module "vpn_gateway_single_site" {
-  source                         = "../.."
-  resource_group_id              = module.resource_group.resource_group_id
-  create_vpn_gateway             = true
-  tags                           = var.tags
-  vpn_gateway_name               = local.vpn_gw_name
-  vpn_gateway_subnet_id          = local.subnet_id
-  vpn_gateway_mode               = "route"
+  source                = "../.."
+  resource_group_id     = module.resource_group.resource_group_id
+  create_vpn_gateway    = true
+  tags                  = var.tags
+  vpn_gateway_name      = local.vpn_gw_name
+  vpn_gateway_subnet_id = local.subnet_id
+  vpn_gateway_mode      = "route"
 
   # Policies
 
@@ -74,8 +74,8 @@ module "vpn_gateway_single_site" {
 
   # Create Connection to Remote Peer
 
-  vpn_gateway_connection_name   = "${var.prefix}-vpn-conn"
-  preshared_key     = var.preshared_key
+  vpn_gateway_connection_name = "${var.prefix}-vpn-conn"
+  preshared_key               = var.preshared_key
 
   # Peer Configuration (remote VPN gateway)
   peer_config = [
@@ -95,11 +95,11 @@ module "vpn_gateway_single_site" {
       ike_identities = [
         {
           type  = "ipv4_address"
-          value =module.vpn_gateway_single_site.vpn_gateway_public_ip
+          value = module.vpn_gateway_single_site.vpn_gateway_public_ip
         },
         {
           type  = "ipv4_address"
-          value =module.vpn_gateway_single_site.vpn_gateway_public_ip
+          value = module.vpn_gateway_single_site.vpn_gateway_public_ip
         }
       ]
     }

@@ -20,7 +20,7 @@ output "ipsec_policies" {
 
 output "vpn_gateway_public_ip" {
   description = "VPN Gateway public IP."
-  value = module.vpn_gateway_single_site.vpn_gateway_public_ip
+  value       = module.vpn_gateway_single_site.vpn_gateway_public_ip
 }
 
 output "vpn_connection_status" {
