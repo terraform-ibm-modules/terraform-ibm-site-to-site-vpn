@@ -27,6 +27,10 @@ variable "existing_vpn_gateway_id" {
   description = "ID of existing VPN Gateway to use. Required if create_vpn_gateway is false and vpn_gateway_name is not provided."
   type        = string
   default     = null
+  validation {
+    condition     = (var.create_vpn_gateway && var.vpn_gateway_name != null) || (var.existing_vpn_gateway_id != null && !var.create_vpn_gateway && var.vpn_gateway_name == null)
+    error_message = "existing_vpn_gateway_id is required if create_vpn_gateway is false and vpn_gateway_name is not provided."
+  }
 }
 
 variable "vpn_gateway_name" {
@@ -35,11 +39,8 @@ variable "vpn_gateway_name" {
   default     = null
 
   validation {
-    condition = (
-      var.vpn_gateway_name != null ||
-      var.existing_vpn_gateway_id != null
-    )
-    error_message = "Either vpn_gateway_name or existing_vpn_gateway_id must be provided."
+    condition     = var.vpn_gateway_name == null || (var.create_vpn_gateway && var.vpn_gateway_name != null)
+    error_message = "When create_vpn_gateway is true, you must provide vpn_gateway_name."
   }
 }
 
@@ -47,6 +48,10 @@ variable "vpn_gateway_subnet_id" {
   description = "Subnet ID where VPN gateway will be created. Required if create_vpn_gateway is true."
   type        = string
   default     = null
+  validation {
+    condition     = var.vpn_gateway_subnet_id == null || (var.create_vpn_gateway && var.vpn_gateway_subnet_id != null)
+    error_message = "When create_vpn_gateway is true, you must provide vpn_gateway_subnet_id."
+  }
 }
 
 variable "vpn_gateway_mode" {
@@ -70,9 +75,13 @@ variable "create_connection" {
 }
 
 variable "connection_name" {
-  description = "Name of the VPN connection."
+  description = "Name of the VPN connection. If `create_connection` is true, connection_name must be provided."
   type        = string
   default     = null
+  validation {
+    condition     = var.connection_name == null || (var.create_connection && var.connection_name != null)
+    error_message = "When create_connection is true, you must provide connection_name."
+  }
 }
 
 variable "preshared_key" {
@@ -97,7 +106,7 @@ variable "peer_config" {
   nullable = false
 
   validation {
-    condition     = length(var.peer_config) == 0 || length(var.peer_config) == 1
+    condition     = length(var.peer_config) <= 1
     error_message = "Only one peer configuration is allowed per connection."
   }
 }
@@ -110,7 +119,8 @@ variable "local_config" {
       value = optional(string)
     }))
   }))
-  default = []
+  default  = []
+  nullable = false
 }
 
 variable "establish_mode" {
@@ -158,7 +168,7 @@ variable "dpd_max_timeout" {
   default     = 10
 }
 
-# ##############################################################################
+###############################################################################
 # Policies
 # ##############################################################################
 
@@ -196,7 +206,7 @@ variable "create_vpn_policies" {
 
 # IKE Policy inputs
 variable "ike_policy_name" {
-  description = "Name of the IKE policy to create."
+  description = "Name of the IKE policy to create. Applicable when create_vpn_policies is true"
   type        = string
   default     = null
 }
@@ -253,7 +263,7 @@ variable "ipsec_authentication_algorithm" {
 variable "ipsec_pfs" {
   description = "The Perfect Forward Secrecy (PFS) protocol for the IPSec policy. Valid values: disabled, group_2, group_5, group_14."
   type        = string
-  default     = null # Optional unless create_vpn_policies is true
+  default     = null
 }
 
 variable "ipsec_key_lifetime" {

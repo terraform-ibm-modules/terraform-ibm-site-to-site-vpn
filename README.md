@@ -269,7 +269,7 @@ No resources.
 |------|-------------|------|---------|:--------:|
 | <a name="input_accept_routes_from_resource_type"></a> [accept\_routes\_from\_resource\_type](#input\_accept\_routes\_from\_resource\_type) | List of resource types allowed to create routes in this table. | `list(string)` | `[]` | no |
 | <a name="input_advertise_routes_to"></a> [advertise\_routes\_to](#input\_advertise\_routes\_to) | Ingress sources to which routes should be advertised. | `list(string)` | `[]` | no |
-| <a name="input_connection_name"></a> [connection\_name](#input\_connection\_name) | Name of the VPN connection. | `string` | `null` | no |
+| <a name="input_connection_name"></a> [connection\_name](#input\_connection\_name) | Name of the VPN connection. If `create_connection` is true, connection\_name must be provided. | `string` | `null` | no |
 | <a name="input_create_connection"></a> [create\_connection](#input\_create\_connection) | Whether to create a VPN connection. Set to false if only managing gateway/policies. | `bool` | `false` | no |
 | <a name="input_create_route_table"></a> [create\_route\_table](#input\_create\_route\_table) | Whether to create a new route table. | `bool` | `false` | no |
 | <a name="input_create_routes"></a> [create\_routes](#input\_create\_routes) | Whether to create VPN routes. | `bool` | `false` | no |
@@ -288,7 +288,7 @@ No resources.
 | <a name="input_ike_dh_group"></a> [ike\_dh\_group](#input\_ike\_dh\_group) | The Diffie-Hellman group to use. Valid values: 14 to 24, or 31. | `number` | `null` | no |
 | <a name="input_ike_encryption_algorithm"></a> [ike\_encryption\_algorithm](#input\_ike\_encryption\_algorithm) | The encryption algorithm used in the IKE policy. Valid values: aes128, aes192, aes256. | `string` | `null` | no |
 | <a name="input_ike_key_lifetime"></a> [ike\_key\_lifetime](#input\_ike\_key\_lifetime) | The key lifetime in seconds. Must be between 1800 and 86400. | `number` | `28800` | no |
-| <a name="input_ike_policy_name"></a> [ike\_policy\_name](#input\_ike\_policy\_name) | Name of the IKE policy to create. | `string` | `null` | no |
+| <a name="input_ike_policy_name"></a> [ike\_policy\_name](#input\_ike\_policy\_name) | Name of the IKE policy to create. Applicable when create\_vpn\_policies is true | `string` | `null` | no |
 | <a name="input_ike_version"></a> [ike\_version](#input\_ike\_version) | The IKE protocol version to use. Valid values: 1 or 2. | `number` | `2` | no |
 | <a name="input_ipsec_authentication_algorithm"></a> [ipsec\_authentication\_algorithm](#input\_ipsec\_authentication\_algorithm) | The authentication algorithm for the IPSec policy. Valid values: sha256, sha384, sha512, disabled. | `string` | `null` | no |
 | <a name="input_ipsec_encryption_algorithm"></a> [ipsec\_encryption\_algorithm](#input\_ipsec\_encryption\_algorithm) | The encryption algorithm for the IPSec policy. Valid values: aes128, aes192, aes256, aes128gcm16, aes192gcm16, aes256gcm16. | `string` | `null` | no |
