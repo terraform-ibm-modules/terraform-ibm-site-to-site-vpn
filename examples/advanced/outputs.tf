@@ -32,12 +32,12 @@ output "vpn_gateway_ips" {
 
 output "vpn_connections_status_site_a" {
   description = "VPN connections status for Site A"
-  value       = module.site_a_to_site_b.vpn_connection
+  value       = module.vpn_gateway_site_a.vpn_gateway_connection_status
 }
 
 output "vpn_connections_status_site_b" {
   description = "VPN connections status for Site B"
-  value       = module.site_b_to_site_a.vpn_connection
+  value       = module.vpn_gateway_site_b.vpn_gateway_connection_status
 }
 
 output "floating_ip_address_site_a" {
@@ -52,12 +52,12 @@ output "floating_ip_address_site_b" {
 
 output "vpn_routes_site_a" {
   description = "VPN routing information for site A."
-  value       = module.site_a_to_site_b.vpn_routes
+  value       = module.vpn_gateway_site_a.vpn_routes
 }
 
 output "vpn_routes_site_b" {
   description = "VPN routing information for site B."
-  value       = module.site_b_to_site_a.vpn_routes
+  value       = module.vpn_gateway_site_b.vpn_routes
 }
 
 output "private_key" {

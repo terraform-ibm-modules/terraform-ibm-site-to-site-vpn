@@ -23,14 +23,22 @@ module "vpn_policies" {
 # VPN Gateway
 ##############################################################################
 
-module "vpn_gateway" {
-  count             = var.create_vpn_gateway ? 1 : 0
-  source            = "./modules/gateway"
-  resource_group_id = var.resource_group_id
-  vpn_gateway_name  = var.vpn_gateway_name
-  vpn_gateway_mode  = var.vpn_gateway_mode
-  subnet_id         = var.vpn_gateway_subnet_id
-  tags              = var.tags
+resource "ibm_is_vpn_gateway" "vpn_gateway" {
+  count          = var.create_vpn_gateway ? 1 : 0
+  name           = var.vpn_gateway_name
+  resource_group = var.resource_group_id
+  mode           = var.vpn_gateway_mode
+  subnet         = var.vpn_gateway_subnet_id
+  tags           = var.tags
+  timeouts {
+    delete = "1h"
+  }
+}
+
+resource "time_sleep" "wait_for_gateway_creation" {
+  count           = var.create_vpn_gateway ? 1 : 0
+  depends_on      = [ibm_is_vpn_gateway.vpn_gateway]
+  create_duration = "30s"
 }
 
 ##############################################################################
@@ -40,7 +48,7 @@ module "vpn_gateway" {
 locals {
 
   vpn_gateway_id = (
-    var.create_vpn_gateway ? module.vpn_gateway[0].vpn_gateway_id :
+    var.create_vpn_gateway ? ibm_is_vpn_gateway.vpn_gateway[0].id :
     var.existing_vpn_gateway_id != null ? var.existing_vpn_gateway_id : null
   )
 
@@ -55,28 +63,55 @@ locals {
   )
 }
 
-module "vpn_connection" {
-  count      = var.create_connection ? 1 : 0
-  depends_on = [module.vpn_gateway, module.vpn_policies]
-  source     = "./modules/gateway_connection"
+resource "ibm_is_vpn_gateway_connection" "vpn_site_to_site_connection" {
+  depends_on         = [module.vpn_policies, time_sleep.wait_for_gateway_creation]
+  name               = var.vpn_gateway_connection_name
+  admin_state_up     = var.is_admin_state_up
+  vpn_gateway        = local.vpn_gateway_id
+  preshared_key      = var.preshared_key
+  establish_mode     = var.establish_mode
+  ike_policy         = local.ike_policy_id
+  ipsec_policy       = local.ipsec_policy_id
+  distribute_traffic = var.enable_distribute_traffic
 
-  vpn_gateway_connection_name = var.connection_name
-  vpn_gateway_id              = local.vpn_gateway_id
-  preshared_key               = var.preshared_key
-  establish_mode              = var.establish_mode
-  is_admin_state_up           = var.is_admin_state_up
-  enable_distribute_traffic   = var.enable_distribute_traffic
-  peer                        = var.peer_config
-  local                       = var.local_config
+  dynamic "peer" {
+    for_each = var.peer_config
+    content {
+      address = lookup(peer.value, "address", null)
+      fqdn    = lookup(peer.value, "fqdn", null)
+      cidrs   = lookup(peer.value, "cidrs", [])
+      dynamic "ike_identity" {
+        for_each = peer.value.ike_identity
+        content {
+          type  = ike_identity.value.type
+          value = ike_identity.value.value
+        }
+      }
+    }
+  }
+
+  dynamic "local" {
+    for_each = var.local_config
+    content {
+      dynamic "ike_identities" {
+        for_each = local.value.ike_identities
+        content {
+          type  = ike_identities.value.type
+          value = ike_identities.value.value
+        }
+      }
+    }
+  }
 
   # DPD settings
-  dpd_action         = var.dpd_action
-  dpd_check_interval = var.dpd_check_interval
-  dpd_max_timeout    = var.dpd_max_timeout
+  action   = var.dpd_action
+  interval = var.dpd_check_interval
+  timeout  = var.dpd_max_timeout
 
-  # Policy IDs
-  ike_policy_id   = local.ike_policy_id
-  ipsec_policy_id = local.ipsec_policy_id
+  timeouts {
+    delete = "1h"
+  }
+
 }
 
 ##############################################################################
@@ -85,7 +120,7 @@ module "vpn_connection" {
 
 module "vpn_routes" {
   count                   = var.create_routes ? 1 : 0
-  depends_on              = [module.vpn_connection]
+  depends_on              = [ibm_is_vpn_gateway_connection.vpn_site_to_site_connection]
   source                  = "./modules/vpn_routing"
   vpc_id                  = var.vpc_id
   existing_route_table_id = var.existing_route_table_id
@@ -101,7 +136,7 @@ module "vpn_routes" {
       action      = route.action
       advertise   = route.advertise
       priority    = route.priority
-      next_hop    = local.vpn_gateway_id
+      next_hop    = route.next_hop
     }
   ]
   existing_routes = []

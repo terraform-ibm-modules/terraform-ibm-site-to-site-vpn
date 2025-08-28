@@ -1,5 +1,5 @@
 ########################################################################################################################
-# Outputs
+# VPN Policies - IKE and IPSec
 ########################################################################################################################
 
 output "ike_policy" {
@@ -23,50 +23,100 @@ output "ipsec_policy" {
   } : null
 }
 
+##############################################################################
+# VPN Gateway
+##############################################################################
+
 output "vpn_gateway_id" {
-  description = "ID of the VPN gateway (created or used)."
-  value       = local.vpn_gateway_id
+  description = "ID of the VPN gateway."
+  value       = ibm_is_vpn_gateway.vpn_gateway[0].id
 }
 
-output "vpn_gateway" {
-  description = "VPN gateway information."
-  value = var.create_vpn_gateway ? {
-    id         = module.vpn_gateway[0].vpn_gateway_id
-    name       = var.vpn_gateway_name
-    crn        = module.vpn_gateway[0].vpn_gateway_crn
-    primary_ip = module.vpn_gateway[0].vpn_gateway_primary_ip
-    members    = module.vpn_gateway[0].vpn_gateway_members
-    status     = module.vpn_gateway[0].vpn_gateway_status
-    vpc_info   = module.vpn_gateway[0].vpn_gateway_vpc_info
-    mode       = var.vpn_gateway_mode
-  } : null
+output "vpn_gateway_crn" {
+  description = "CRN of the VPN gateway."
+  value       = ibm_is_vpn_gateway.vpn_gateway[0].crn
 }
 
 output "vpn_gateway_public_ip" {
-  description = "Public IP address of the VPN gateway created."
-  value       = try(module.vpn_gateway[0].vpn_gateway_primary_ip, null)
+  description = "Resolved public IP address from either `public_ip_address` or `public_ip_address2`. [Learn more](https://registry.terraform.io/providers/IBM-cloud/ibm/1.80.4/docs/resources/is_vpn_gateway#public_ip_address2-4)"
+  value       = ibm_is_vpn_gateway.vpn_gateway[0].public_ip_address == "0.0.0.0" ? ibm_is_vpn_gateway.vpn_gateway[0].public_ip_address2 : ibm_is_vpn_gateway.vpn_gateway[0].public_ip_address
 }
 
-output "vpn_connection" {
-  description = "VPN connection information."
-  value = var.create_connection ? {
-    id             = module.vpn_connection[0].vpn_gateway_connection_id
-    name           = var.connection_name
-    status         = module.vpn_connection[0].vpn_gateway_connection_status
-    mode           = module.vpn_connection[0].vpn_gateway_connection_mode
-    status_reasons = module.vpn_connection[0].vpn_status_reasons
-  } : null
+output "vpn_gateway_members" {
+  description = "List of VPN gateway members."
+  value = [
+    for member in ibm_is_vpn_gateway.vpn_gateway[0].members : {
+      address         = member.address
+      private_address = member.private_address
+      role            = member.role
+    }
+  ]
 }
 
-output "ike_policy_id" {
-  description = "ID of the IKE policy (created, existing, or looked up)."
-  value       = local.ike_policy_id
+output "vpn_gateway_status" {
+  description = "Overall health state of the VPN gateway. Refer [here](https://registry.terraform.io/providers/IBM-cloud/ibm/1.80.4/docs/resources/is_vpn_gateway#health_state-4) for more information."
+  value       = ibm_is_vpn_gateway.vpn_gateway[0].health_state
 }
 
-output "ipsec_policy_id" {
-  description = "ID of the IPSec policy (created, existing, or looked up)."
-  value       = local.ipsec_policy_id
+output "vpn_gateway_vpc_info" {
+  description = "Information about the VPC associated with the VPN gateway."
+  value       = ibm_is_vpn_gateway.vpn_gateway[0].vpc
 }
+
+
+##############################################################################
+# VPN Gateway Connection
+##############################################################################
+
+output "vpn_gateway_connection_name" {
+  description = "Name of the VPN gateway connection."
+  value       = var.vpn_gateway_connection_name
+}
+
+output "vpn_gateway_connection_id" {
+  description = "Unique identifier of the VPN gateway connection."
+  value       = ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.gateway_connection
+}
+
+# This is part of attribute reference but giving errors now.
+# output "vpn_gateway_connection_crn" {
+#   description = "Cloud Resource Name (CRN) of the VPN gateway connection."
+#   value       = ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.crn
+# }
+
+output "vpn_gateway_connection_status" {
+  description = "Current status of the VPN gateway connection, either 'up' or 'down'."
+  value       = ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.status
+}
+
+output "vpn_gateway_connection_mode" {
+  description = "Mode of the VPN gateway connection: either 'policy' or 'route'."
+  value       = ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.mode
+}
+
+# output "vpn_tunnels" {
+#   description = "List of VPN tunnel configurations in static route mode."
+#   value = ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.mode == "route" ? [
+#     for tunnel in ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.tunnels : {
+#       address       = tunnel.address
+#       resource_type = tunnel.resource_type
+#     }
+#   ] : null
+# }
+
+output "vpn_status_reasons" {
+  description = "List of status reasons explaining the current connection state."
+  value = length(try(ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.status_reasons, [])) > 0 ? [
+    for reason in ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.status_reasons : {
+      code      = try(reason.code, null)
+      message   = try(reason.message, null)
+      more_info = try(reason.more_info, null)
+  }] : null
+}
+
+##############################################################################
+# Routes
+##############################################################################
 
 output "vpn_routes" {
   description = "VPN routing information."
