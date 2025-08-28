@@ -109,7 +109,8 @@ Please refer [Planning considerations for VPN gateways](https://cloud.ibm.com/do
 * If peer is behind NAT, use `establish_mode = "peer_only"` and supply FQDN and identity overrides because identities must match expected values on negotiation.
 * Creating a route in an ingress routing table with a VPN gateway connection as the next hop is not supported.
 
-Please refer [Known issues for VPN gateways](https://cloud.ibm.com/docs/vpc?topic=vpc-vpn-limitations) for more information.
+Please refer [Known issues for VPN gateways](https://cloud.ibm.com/docs/vpc?topic=vpc-vpn-limitations) for more information.</br>
+Tunnel status may remain DOWN for a while after deployment, with delays observed before it shows as UP.
 
 ### Usage
 
