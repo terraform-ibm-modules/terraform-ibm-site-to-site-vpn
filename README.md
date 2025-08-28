@@ -292,13 +292,13 @@ You need the following permissions to run this module.
 | <a name="input_route_subnet_id"></a> [route\_subnet\_id](#input\_route\_subnet\_id) | Subnet ID to attach to the routing table. | `string` | `null` | no |
 | <a name="input_route_transit_gateway_ingress"></a> [route\_transit\_gateway\_ingress](#input\_route\_transit\_gateway\_ingress) | Allow routing from Transit Gateway. | `bool` | `false` | no |
 | <a name="input_route_vpc_zone_ingress"></a> [route\_vpc\_zone\_ingress](#input\_route\_vpc\_zone\_ingress) | Allow routing from other zones within the VPC. | `bool` | `false` | no |
-| <a name="input_routes"></a> [routes](#input\_routes) | List of routes to create. | <pre>list(object({<br/>    name        = string<br/>    zone        = string<br/>    destination = string<br/>    next_hop    = string<br/>    action      = optional(string, "delegate")<br/>    advertise   = optional(bool, false)<br/>    priority    = optional(number, 2)<br/>  }))</pre> | `[]` | no |
+| <a name="input_routes"></a> [routes](#input\_routes) | List of routes to create. | <pre>list(object({<br/>    name        = string<br/>    zone        = string<br/>    destination = string<br/>    next_hop    = string<br/>    action      = optional(string, "deliver")<br/>    advertise   = optional(bool, false)<br/>    priority    = optional(number, 2)<br/>  }))</pre> | `[]` | no |
 | <a name="input_routing_table_name"></a> [routing\_table\_name](#input\_routing\_table\_name) | Name of the routing table to create. | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | List of Tags for the resource created | `list(string)` | `null` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | VPC ID where routes will be created. | `string` | `null` | no |
 | <a name="input_vpn_gateway_connection_name"></a> [vpn\_gateway\_connection\_name](#input\_vpn\_gateway\_connection\_name) | Name of the VPN connection. | `string` | n/a | yes |
 | <a name="input_vpn_gateway_mode"></a> [vpn\_gateway\_mode](#input\_vpn\_gateway\_mode) | Specifies the VPN configuration mode for IBM Cloud VPN for VPC. Use 'route' for a static, route-based IPsec tunnel or 'policy' for a policy-based tunnel to connect your VPC to another private network. | `string` | `"route"` | no |
-| <a name="input_vpn_gateway_name"></a> [vpn\_gateway\_name](#input\_vpn\_gateway\_name) | Name of the VPN gateway. | `string` | n/a | yes |
+| <a name="input_vpn_gateway_name"></a> [vpn\_gateway\_name](#input\_vpn\_gateway\_name) | Name of the VPN gateway. Only required if creating a new VPN Gateway. | `string` | `null` | no |
 | <a name="input_vpn_gateway_subnet_id"></a> [vpn\_gateway\_subnet\_id](#input\_vpn\_gateway\_subnet\_id) | The ID of the subnet where the VPN gateway will reside in. | `string` | `null` | no |
 
 ### Outputs

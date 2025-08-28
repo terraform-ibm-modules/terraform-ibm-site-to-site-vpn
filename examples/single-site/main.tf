@@ -120,7 +120,7 @@ module "vpn_gateway_single_site" {
       name             = "${var.prefix}-vpn-route"
       vpn_gateway_name = local.vpn_gw_name
       zone             = local.zone
-      next_hop         = module.vpn_gateway_single_site.vpn_gateway_id
+      next_hop         = module.vpn_gateway_single_site.vpn_gateway_connection_id
       destination      = var.remote_cidr
     }
   ]

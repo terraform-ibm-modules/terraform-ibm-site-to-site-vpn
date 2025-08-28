@@ -34,8 +34,13 @@ variable "existing_vpn_gateway_id" {
 }
 
 variable "vpn_gateway_name" {
-  description = "Name of the VPN gateway."
+  description = "Name of the VPN gateway. Only required if creating a new VPN Gateway."
   type        = string
+  default     = null
+  validation {
+    condition     = var.vpn_gateway_name == null || (var.create_vpn_gateway && var.vpn_gateway_name != null)
+    error_message = "When create_vpn_gateway is true, you must provide vpn_gateway_name."
+  }
 }
 
 variable "vpn_gateway_subnet_id" {
@@ -62,19 +67,9 @@ variable "vpn_gateway_mode" {
 # VPN Gateway Connection Configuration
 ##############################################################################
 
-# variable "create_connection" {
-#   description = "Whether to create a VPN connection. Set to false if only managing gateway/policies."
-#   type        = bool
-#   default     = false
-# }
-
 variable "vpn_gateway_connection_name" {
   description = "Name of the VPN connection."
   type        = string
-  # validation {
-  #   condition     = var.connection_name == null || (var.create_connection && var.connection_name != null)
-  #   error_message = "When create_connection is true, you must provide connection_name."
-  # }
 }
 
 variable "preshared_key" {
@@ -144,6 +139,7 @@ variable "local_config" {
   }))
   default  = []
   nullable = false
+
   validation {
     condition = length(var.local_config) == 0 || alltrue([
       for member in var.local_config : alltrue([
@@ -153,6 +149,7 @@ variable "local_config" {
     ])
     error_message = "Each ike_identity 'type' must be one of: fqdn, hostname, ipv4_address, or key_id."
   }
+
   validation {
     condition = length(var.local_config) == 0 || alltrue([
       for member in var.local_config : length(member.ike_identities) == 2
@@ -335,7 +332,7 @@ variable "routes" {
     zone        = string
     destination = string
     next_hop    = string
-    action      = optional(string, "delegate")
+    action      = optional(string, "deliver")
     advertise   = optional(bool, false)
     priority    = optional(number, 2)
   }))
