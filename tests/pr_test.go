@@ -24,8 +24,8 @@ import (
 // Use existing resource group
 const resourceGroup = "geretain-test-resources"
 
-const advancedExampleDir = "examples/vpc-to-vpc"
-const basicExampleDir = "examples/single-site"
+const vpcTovpcExampleDir = "examples/vpc-to-vpc"
+const singleSiteExampleDir = "examples/single-site"
 
 // Define a struct with fields that match the structure of the YAML data
 const yamlLocation = "../common-dev-assets/common-go-assets/common-permanent-resources.yaml"
@@ -124,7 +124,7 @@ func TestRunSingleSiteExample(t *testing.T) {
 	existingTerraformOptions := setupRemoteVPNGateway(t, region, prefixExistingRes)
 
 	// Test Single Site using existing VPC and VPN Gateway details
-	options := setupOptions(t, "site1", basicExampleDir)
+	options := setupOptions(t, "site1", singleSiteExampleDir)
 	options.TerraformVars["remote_gateway_ip"] = terraform.Output(t, existingTerraformOptions, "vpn_gateway_public_ip")
 	output, err := options.RunTestConsistency()
 	assert.Nil(t, err, "This should not have errored")
@@ -147,7 +147,7 @@ func TestRunVpcToVpcExample(t *testing.T) {
 		}
 	}
 
-	options := setupOptions(t, "vpcs", advancedExampleDir)
+	options := setupOptions(t, "vpcs", vpcTovpcExampleDir)
 
 	options.TerraformVars = map[string]interface{}{
 		"region_site_a":  region_site_a,
