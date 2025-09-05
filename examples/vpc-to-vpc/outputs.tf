@@ -2,6 +2,8 @@
 # # Outputs
 # ########################################################################################################################
 
+
+
 output "vpc_id_site_a" {
   description = "VPC ID of Site A."
   value       = local.vpc_id_site_a
@@ -64,4 +66,24 @@ output "private_key" {
   description = "Commonly used SSH private key for both the sites."
   value       = tls_private_key.ssh_key.private_key_pem
   sensitive   = true
+}
+
+output "vpn_gateway_id_side_a" {
+  description = "ID of the VPN gateway."
+  value       = module.vpn_gateway_site_a.vpn_gateway_id
+}
+
+output "vpn_gateway_id_side_b" {
+  description = "CRN of the VPN gateway."
+  value       = module.vpn_gateway_site_b.vpn_gateway_id
+}
+
+output "vpn_gateway_crn_side_a" {
+  description = "ID of the VPN gateway."
+  value       = module.vpn_gateway_site_a.vpn_gateway_crn
+}
+
+output "vpn_gateway_crn_side_b" {
+  description = "CRN of the VPN gateway."
+  value       = module.vpn_gateway_site_b.vpn_gateway_crn
 }
