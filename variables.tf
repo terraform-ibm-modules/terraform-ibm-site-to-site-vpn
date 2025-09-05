@@ -98,7 +98,7 @@ variable "peer_config" {
   type = list(object({
     address = optional(string)
     fqdn    = optional(string)
-    cidrs   = optional(list(string), [])
+    cidrs   = optional(list(string))
     ike_identity = list(object({
       type  = string
       value = optional(string)
