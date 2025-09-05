@@ -98,7 +98,7 @@ variable "peer_config" {
   type = list(object({
     address = optional(string)
     fqdn    = optional(string)
-    cidrs   = optional(list(string), [])
+    cidrs   = optional(list(string))
     ike_identity = list(object({
       type  = string
       value = optional(string)
@@ -132,6 +132,7 @@ variable "peer_config" {
 variable "local_config" {
   description = "Optional configuration for local IKE identities. Each entry in the list represents a VPN gateway member in active-active mode, containing one or more IKE identities."
   type = list(object({
+    cidrs = optional(list(string))
     ike_identities = list(object({
       type  = string
       value = optional(string)

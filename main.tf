@@ -93,6 +93,7 @@ resource "ibm_is_vpn_gateway_connection" "vpn_site_to_site_connection" {
   dynamic "local" {
     for_each = var.local_config
     content {
+      cidrs = local.value.cidrs
       dynamic "ike_identities" {
         for_each = local.value.ike_identities
         content {
