@@ -92,7 +92,6 @@ module "vpn_gateway_single_site" {
   # Local Configuration
   local_config = [
     {
-      cidrs = ["10.10.0.0/16"] # Example local CIDR for VPC
       ike_identities = [
         {
           type  = "ipv4_address"
