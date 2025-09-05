@@ -8,6 +8,11 @@ variable "ibmcloud_api_key" {
   sensitive   = true
 }
 
+variable "existing_vpn_gateway_region" {
+  type        = string
+  description = "Region where the public gateway is located."
+}
+
 variable "existing_vpn_gateway_id" {
   type        = string
   description = "ID of the existing VPN gateway to add the new connection to."

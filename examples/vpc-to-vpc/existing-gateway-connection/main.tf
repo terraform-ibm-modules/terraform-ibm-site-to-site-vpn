@@ -13,12 +13,8 @@ module "resource_group" {
 
 module "vpn_connection_to_site_c" {
   source = "../../.."
-  providers = {
-    ibm = ibm.site_a
-  }
 
   resource_group_id = module.resource_group.resource_group_id
-  tags              = ["terraform", "test", "existing-gateway"]
 
   # Use existing VPN gateway instead of creating new one
   create_vpn_gateway      = false

@@ -3,7 +3,6 @@
 ########################################################################################################################
 
 provider "ibm" {
-  alias            = "site_a"
   ibmcloud_api_key = var.ibmcloud_api_key
-  region           = "eu-de" # Same region as parent example site A
+  region           = var.existing_vpn_gateway_region
 }
