@@ -16,6 +16,7 @@ This module automates the provisioning of a site-to-site VPN. For more informati
     * [vpn_policies](./modules/vpn_policies)
     * [vpn_routing](./modules/vpn_routing)
 * [Examples](./examples)
+    * [Simple Test: Adding Connection to Existing VPN Gateway](./examples/vpc-to-vpc/existing-gateway-connection)
     * [VPC to VPC Example](./examples/vpc-to-vpc)
     * [](./examples/single-site)
 * [Contributing](#contributing)
