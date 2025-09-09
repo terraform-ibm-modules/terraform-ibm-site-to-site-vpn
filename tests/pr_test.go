@@ -126,6 +126,7 @@ func TestRunSingleSiteExample(t *testing.T) {
 	// Test Single Site using existing VPC and VPN Gateway details
 	options := setupOptions(t, "site1", singleSiteExampleDir)
 	options.TerraformVars["remote_gateway_ip"] = terraform.Output(t, existingTerraformOptions, "vpn_gateway_public_ip")
+	options.TerraformVars["remote_cidr"] = terraform.Output(t, existingTerraformOptions, "remote_cidr")
 	output, err := options.RunTestConsistency()
 	assert.Nil(t, err, "This should not have errored")
 	assert.NotNil(t, output, "Expected some output")
