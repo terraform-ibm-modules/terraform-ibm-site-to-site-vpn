@@ -120,7 +120,7 @@ resource "ibm_is_vpn_gateway_connection" "vpn_site_to_site_connection" {
 ##############################################################################
 
 module "vpn_routes" {
-  count                   = var.create_routes ? 1 : 0
+  count                   = var.create_routes && var.vpn_gateway_mode == "route" ? 1 : 0
   depends_on              = [ibm_is_vpn_gateway_connection.vpn_site_to_site_connection]
   source                  = "./modules/vpn_routing"
   vpc_id                  = var.vpc_id
@@ -129,6 +129,7 @@ module "vpn_routes" {
   routing_table_name      = var.routing_table_name
   route_attach_subnet     = var.route_attach_subnet
   subnet_id_to_attach     = var.route_subnet_id
+  vpn_gateway_mode        = var.vpn_gateway_mode
   vpn_routes = [
     for route in var.routes : {
       name        = route.name

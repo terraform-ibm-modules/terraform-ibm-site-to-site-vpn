@@ -2,8 +2,9 @@ locals {
   route_table_id = var.existing_route_table_id != null ? var.existing_route_table_id : (
     var.create_route_table ? split("/", ibm_is_vpc_routing_table.vpn_routing_table[0].id)[1] : null
   )
-  # Combine existing and new routes
-  all_routes = concat(var.existing_routes, var.vpn_routes)
+
+  # Combine existing and new routes only if route mode is enabled
+  all_routes = var.vpn_gateway_mode == "route" ? concat(var.existing_routes, var.vpn_routes) : []
 }
 
 ########################################
@@ -36,13 +37,15 @@ resource "ibm_is_subnet_routing_table_attachment" "attach_subnet" {
 # Create Routes
 ########################################
 resource "ibm_is_vpc_routing_table_route" "vpn_route" {
+
   depends_on = [
     ibm_is_vpc_routing_table.vpn_routing_table,
     ibm_is_subnet_routing_table_attachment.attach_subnet
   ]
+
   for_each = {
     for _, route in local.all_routes : route.name => route
-    if var.existing_route_table_id != null || var.create_route_table
+    if(var.existing_route_table_id != null || var.create_route_table) && var.vpn_gateway_mode == "route"
   }
 
   vpc           = var.vpc_id

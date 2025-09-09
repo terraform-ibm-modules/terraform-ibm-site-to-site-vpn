@@ -127,6 +127,15 @@ variable "peer_config" {
     condition     = length(var.peer_config) <= 1
     error_message = "Only one peer configuration is allowed per connection."
   }
+
+  validation {
+    condition = length(var.peer_config) == 0 || alltrue([
+      for peer in var.peer_config :
+      var.vpn_gateway_mode == "route" || (peer.cidrs != null && length(coalesce(peer.cidrs, [])) > 0)
+    ])
+    error_message = "For policy-based VPN, each peer_config must define at least one CIDR."
+  }
+
 }
 
 variable "local_config" {
@@ -158,6 +167,15 @@ variable "local_config" {
     ])
     error_message = "For route-based VPN gateways, each 'local' entry must have exactly 2 ike_identities. For policy-based gateways, each 'local' entry may have at most 1 ike_identity."
   }
+
+  validation {
+    condition = length(var.local_config) == 0 || alltrue([
+      for member in var.local_config :
+      var.vpn_gateway_mode == "route" || (member.cidrs != null && length(coalesce(member.cidrs, [])) > 0)
+    ])
+    error_message = "For policy-based VPN, each local_config must define at least one CIDR."
+  }
+
 }
 
 variable "establish_mode" {

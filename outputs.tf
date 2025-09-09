@@ -75,7 +75,8 @@ output "vpn_gateway_connection_name" {
 
 output "vpn_gateway_connection_id" {
   description = "Unique identifier of the VPN gateway connection."
-  value       = ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.gateway_connection
+  value       = try(ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.gateway_connection, null)
+
 }
 
 # This is part of attribute reference but giving errors now.
@@ -86,22 +87,23 @@ output "vpn_gateway_connection_id" {
 
 output "vpn_gateway_connection_status" {
   description = "Current status of the VPN gateway connection, either 'up' or 'down'."
-  value       = ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.status
+  value       = try(ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.status, null)
 }
 
 output "vpn_gateway_connection_mode" {
   description = "Mode of the VPN gateway connection: either 'policy' or 'route'."
-  value       = ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.mode
+  # value       = ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.mode
+  value = try(ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.mode, null)
+
 }
 
 # output "vpn_tunnels" {
-#   description = "List of VPN tunnel configurations in static route mode."
-#   value = ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.mode == "route" ? [
-#     for tunnel in ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.tunnels : {
+#   description = "List of VPN tunnel configurations (route mode only)."
+#   value = ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.mode == "route" ?
+#     try([for tunnel in ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.tunnels : {
 #       address       = tunnel.address
 #       resource_type = tunnel.resource_type
-#     }
-#   ] : null
+#     }], []) : null
 # }
 
 output "vpn_status_reasons" {
@@ -120,9 +122,10 @@ output "vpn_status_reasons" {
 
 output "vpn_routes" {
   description = "VPN routing information."
-  value = var.create_routes ? {
+  value = (var.create_routes && var.vpn_gateway_mode == "route") ? {
     route_table_id = module.vpn_routes[0].route_table_id
     routes_count   = module.vpn_routes[0].routes_count
     created_routes = module.vpn_routes[0].created_routes
   } : null
+
 }
