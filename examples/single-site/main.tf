@@ -58,7 +58,7 @@ module "vpn_gateway_single_site" {
   tags                  = var.tags
   vpn_gateway_name      = local.vpn_gw_name
   vpn_gateway_subnet_id = local.subnet_id
-  vpn_gateway_mode      = "route"
+  vpn_gateway_mode      = "policy" # Policy Based VPN
 
   # Policies
 
@@ -81,6 +81,7 @@ module "vpn_gateway_single_site" {
   peer_config = [
     {
       address = var.remote_gateway_ip
+      cidrs   = [var.remote_cidr]
       ike_identity = [
         {
           type  = "ipv4_address"
@@ -92,11 +93,8 @@ module "vpn_gateway_single_site" {
   # Local Configuration
   local_config = [
     {
+      cidrs = [local.address_prefix_cidr]
       ike_identities = [
-        {
-          type  = "ipv4_address"
-          value = module.vpn_gateway_single_site.vpn_gateway_public_ip
-        },
         {
           type  = "ipv4_address"
           value = module.vpn_gateway_single_site.vpn_gateway_public_ip
@@ -105,23 +103,7 @@ module "vpn_gateway_single_site" {
     }
   ]
 
-  # Create routing table
-  create_route_table               = true
-  routing_table_name               = "${var.prefix}-vpn-rt"
-  accept_routes_from_resource_type = ["vpn_gateway"]
-  route_attach_subnet              = true
-  route_subnet_id                  = local.subnet_id
-
-  # Add routes
-  create_routes = true
-  vpc_id        = ibm_is_vpc.vpc.id
-  routes = [
-    {
-      name             = "${var.prefix}-vpn-route"
-      vpn_gateway_name = local.vpn_gw_name
-      zone             = local.zone
-      next_hop         = module.vpn_gateway_single_site.vpn_gateway_connection_id
-      destination      = var.remote_cidr
-    }
-  ]
+  # Skip routing table & routes for policy VPN
+  create_route_table = false
+  create_routes      = false
 }

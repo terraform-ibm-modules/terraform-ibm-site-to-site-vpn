@@ -74,6 +74,7 @@ variable "accept_routes_from_resource_type" {
   description = "List of resource types allowed to create routes in this table."
   type        = list(string)
   default     = []
+  nullable    = false
 
   validation {
     condition = alltrue([
@@ -129,6 +130,12 @@ variable "subnet_id_to_attach" {
 # Routes Variables
 #####################################################################################
 
+variable "vpn_gateway_mode" {
+  description = "Mode of the VPN gateway. Allowed values: policy, route"
+  type        = string
+  default     = "route"
+}
+
 variable "existing_routes" {
   description = "List of existing route configurations to use."
   type = list(object({
@@ -154,26 +161,32 @@ variable "vpn_routes" {
     advertise   = optional(bool, false)
     priority    = optional(number, 2)
   }))
-  default = []
+  default  = []
+  nullable = false
 
   validation {
-    condition = alltrue([
+    condition = var.vpn_gateway_mode == "route" || alltrue([
       for route in var.vpn_routes : contains(["deliver", "delegate", "delegate_vpc", "drop"], route.action)
     ])
     error_message = "Route action must be one of 'deliver', 'delegate', 'delegate_vpc' or 'drop'."
   }
 
   validation {
-    condition = alltrue([
+    condition = var.vpn_gateway_mode == "route" || alltrue([
       for route in var.vpn_routes : can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]+$", route.destination))
     ])
     error_message = "Destination must be a valid CIDR block."
   }
 
   validation {
-    condition = alltrue([
+    condition = var.vpn_gateway_mode == "route" || alltrue([
       for route in var.vpn_routes : route.priority >= 0 && route.priority <= 4
     ])
     error_message = "Route Priority must be between 0 and 4."
+  }
+
+  validation {
+    condition     = var.vpn_gateway_mode == "route" || length(var.vpn_routes) == 0
+    error_message = "Routes can only be defined when vpn_gateway_mode is 'route'."
   }
 }

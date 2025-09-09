@@ -2,8 +2,6 @@
 # # Outputs
 # ########################################################################################################################
 
-
-
 output "vpc_id_site_a" {
   description = "VPC ID of Site A."
   value       = local.vpc_id_site_a
@@ -25,7 +23,7 @@ output "vsi_private_ip_site_b" {
 }
 
 output "vpn_gateway_ips" {
-  description = "VPN Gateway public IPs."
+  description = "VPN Gateway public IPs of Site A and Site B."
   value = {
     site_a = module.vpn_gateway_site_a.vpn_gateway_public_ip
     site_b = module.vpn_gateway_site_b.vpn_gateway_public_ip
@@ -33,12 +31,12 @@ output "vpn_gateway_ips" {
 }
 
 output "vpn_connections_status_site_a" {
-  description = "VPN connections status for Site A"
+  description = "VPN connections status for Site A."
   value       = module.vpn_gateway_site_a.vpn_gateway_connection_status
 }
 
 output "vpn_connections_status_site_b" {
-  description = "VPN connections status for Site B"
+  description = "VPN connections status for Site B."
   value       = module.vpn_gateway_site_b.vpn_gateway_connection_status
 }
 
@@ -68,22 +66,22 @@ output "private_key" {
   sensitive   = true
 }
 
-output "vpn_gateway_id_side_a" {
-  description = "ID of the VPN gateway."
+output "vpn_gateway_id_site_a" {
+  description = "ID of the Site A VPN gateway."
   value       = module.vpn_gateway_site_a.vpn_gateway_id
 }
 
-output "vpn_gateway_id_side_b" {
-  description = "CRN of the VPN gateway."
+output "vpn_gateway_id_site_b" {
+  description = "ID of the Site B VPN gateway."
   value       = module.vpn_gateway_site_b.vpn_gateway_id
 }
 
-output "vpn_gateway_crn_side_a" {
-  description = "ID of the VPN gateway."
+output "vpn_gateway_crn_site_a" {
+  description = "CRN of the Site A VPN gateway."
   value       = module.vpn_gateway_site_a.vpn_gateway_crn
 }
 
-output "vpn_gateway_crn_side_b" {
-  description = "CRN of the VPN gateway."
+output "vpn_gateway_crn_site_b" {
+  description = "CRN of the Site B VPN gateway."
   value       = module.vpn_gateway_site_b.vpn_gateway_crn
 }

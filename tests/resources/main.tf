@@ -11,6 +11,9 @@ module "resource_group" {
 # Provision VPC
 ##############################################################################
 
+locals {
+  address_prefix_cidr = "10.100.10.0/24"
+}
 
 resource "ibm_is_vpc" "test_vpc" {
   name           = "${var.prefix}-vpc"
@@ -21,7 +24,7 @@ resource "ibm_is_vpc_address_prefix" "prefix" {
   name = "${var.prefix}-prefix"
   zone = "${var.region}-1"
   vpc  = ibm_is_vpc.test_vpc.id
-  cidr = "10.100.10.0/24"
+  cidr = local.address_prefix_cidr
 }
 
 resource "ibm_is_subnet" "subnet_zone_1" {
@@ -32,7 +35,7 @@ resource "ibm_is_subnet" "subnet_zone_1" {
   name            = "${var.prefix}-subnet-1"
   vpc             = ibm_is_vpc.test_vpc.id
   zone            = "${var.region}-1"
-  ipv4_cidr_block = "10.100.10.0/24"
+  ipv4_cidr_block = local.address_prefix_cidr
   tags            = var.resource_tags
 }
 

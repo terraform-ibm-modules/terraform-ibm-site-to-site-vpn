@@ -21,3 +21,8 @@ output "vpn_gateway_public_ip" {
   description = "VPN Gateway public IP."
   value       = ibm_is_vpn_gateway.remote_vpn_gateway.public_ip_address == "0.0.0.0" ? ibm_is_vpn_gateway.remote_vpn_gateway.public_ip_address2 : ibm_is_vpn_gateway.remote_vpn_gateway.public_ip_address
 }
+
+output "remote_cidr" {
+  description = "Remote CIDR to be used."
+  value       = local.address_prefix_cidr
+}
