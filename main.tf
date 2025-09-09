@@ -72,7 +72,7 @@ resource "ibm_is_vpn_gateway_connection" "vpn_site_to_site_connection" {
   establish_mode     = var.establish_mode
   ike_policy         = local.ike_policy_id
   ipsec_policy       = local.ipsec_policy_id
-  distribute_traffic = var.enable_distribute_traffic
+  distribute_traffic = var.vpn_gateway_mode == "route" ? var.enable_distribute_traffic : false
 
   dynamic "peer" {
     for_each = var.peer_config

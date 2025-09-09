@@ -130,7 +130,7 @@ variable "peer_config" {
 }
 
 variable "local_config" {
-  description = "Optional configuration for local IKE identities. Each entry in the list represents a VPN gateway member in active-active mode, containing one or more IKE identities."
+  description = "Optional configuration for local IKE identities. Each entry in the list represents a VPN gateway member. For route-based VPN gateway each member must specify exactly 2 identities. For policy-based VPN gateway each member may provide at most 1 identity."
   type = list(object({
     cidrs = optional(list(string))
     ike_identities = list(object({
@@ -153,9 +153,10 @@ variable "local_config" {
 
   validation {
     condition = length(var.local_config) == 0 || alltrue([
-      for member in var.local_config : length(member.ike_identities) == 2
+      for member in var.local_config :
+      var.vpn_gateway_mode == "route" ? length(member.ike_identities) == 2 : length(member.ike_identities) <= 1
     ])
-    error_message = "Each 'local' entry must have exactly 2 ike_identities."
+    error_message = "For route-based VPN gateways, each 'local' entry must have exactly 2 ike_identities. For policy-based gateways, each 'local' entry may have at most 1 ike_identity."
   }
 }
 

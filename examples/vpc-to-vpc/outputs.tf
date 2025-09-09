@@ -68,22 +68,22 @@ output "private_key" {
   sensitive   = true
 }
 
-output "vpn_gateway_id_side_a" {
+output "vpn_gateway_id_site_a" {
   description = "ID of the VPN gateway."
   value       = module.vpn_gateway_site_a.vpn_gateway_id
 }
 
-output "vpn_gateway_id_side_b" {
+output "vpn_gateway_id_site_b" {
   description = "CRN of the VPN gateway."
   value       = module.vpn_gateway_site_b.vpn_gateway_id
 }
 
-output "vpn_gateway_crn_side_a" {
+output "vpn_gateway_crn_site_a" {
   description = "ID of the VPN gateway."
   value       = module.vpn_gateway_site_a.vpn_gateway_crn
 }
 
-output "vpn_gateway_crn_side_b" {
+output "vpn_gateway_crn_site_b" {
   description = "CRN of the VPN gateway."
   value       = module.vpn_gateway_site_b.vpn_gateway_crn
 }
