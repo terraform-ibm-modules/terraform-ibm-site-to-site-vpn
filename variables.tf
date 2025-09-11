@@ -67,7 +67,6 @@ variable "vpn_gateway_mode" {
 # VPN Gateway Connection Configuration
 ##############################################################################
 
-# Root variable for all VPN connections
 variable "vpn_connections" {
   description = "List of VPN connections to attach to the VPN gateway."
   type = list(object({

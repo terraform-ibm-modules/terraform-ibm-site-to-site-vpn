@@ -152,13 +152,3 @@ module "vpn_routes" {
   route_internet_ingress           = var.route_internet_ingress
   tags                             = var.tags
 }
-
-
-moved {
-  from = ibm_is_vpn_gateway_connection.vpn_site_to_site_connection
-  to   = ibm_is_vpn_gateway_connection.vpn_site_to_site_connection["default"]
-}
-
-# terraform state mv \
-#   'module.site2site.ibm_is_vpn_connection.connection' \
-#   'module.site2site.ibm_is_vpn_connection.connections["my-connection-name"]'

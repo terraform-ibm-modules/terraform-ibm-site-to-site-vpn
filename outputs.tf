@@ -68,64 +68,67 @@ output "vpn_gateway_vpc_info" {
 # VPN Gateway Connection
 ##############################################################################
 
-output "vpn_gateway_connection_name" {
-  description = "Name of the VPN gateway connection."
-  value       = var.vpn_gateway_connection_name
+output "vpn_gateway_connection_ids" {
+  description = "Map of VPN gateway connection IDs, keyed by connection name."
+  value       = { for k, v in ibm_is_vpn_gateway_connection.vpn_site_to_site_connection : k => v.gateway_connection }
 }
 
-output "vpn_gateway_connection_id" {
-  description = "Unique identifier of the VPN gateway connection."
-  value       = try(ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.gateway_connection, null)
-
-}
-
+# CRNs of all VPN Connections
 # This is part of attribute reference but giving errors now.
-# output "vpn_gateway_connection_crn" {
-#   description = "Cloud Resource Name (CRN) of the VPN gateway connection."
-#   value       = ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.crn
+# output "vpn_gateway_connection_crns" {
+#   description = "Map of VPN gateway connection CRNs, keyed by connection name."
+#   value       = { for k, v in ibm_is_vpn_gateway_connection.vpn_site_to_site_connection : k => v.crn }
 # }
 
-output "vpn_gateway_connection_status" {
-  description = "Current status of the VPN gateway connection, either 'up' or 'down'."
-  value       = try(ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.status, null)
+output "vpn_gateway_connection_statuses" {
+  description = "Map of current statuses for each VPN gateway connection, either 'up' or 'down'."
+  value       = { for k, v in ibm_is_vpn_gateway_connection.vpn_site_to_site_connection : k => v.status }
 }
 
-output "vpn_gateway_connection_mode" {
-  description = "Mode of the VPN gateway connection: either 'policy' or 'route'."
-  # value       = ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.mode
-  value = try(ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.mode, null)
-
+output "vpn_gateway_connection_modes" {
+  description = "Map of VPN gateway connection modes: either 'policy' or 'route'."
+  value       = { for k, v in ibm_is_vpn_gateway_connection.vpn_site_to_site_connection : k => v.mode }
 }
-
-# output "vpn_tunnels" {
-#   description = "List of VPN tunnel configurations (route mode only)."
-#   value = ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.mode == "route" ?
-#     try([for tunnel in ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.tunnels : {
-#       address       = tunnel.address
-#       resource_type = tunnel.resource_type
-#     }], []) : null
-# }
 
 output "vpn_status_reasons" {
-  description = "List of status reasons explaining the current connection state."
-  value = length(try(ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.status_reasons, [])) > 0 ? [
-    for reason in ibm_is_vpn_gateway_connection.vpn_site_to_site_connection.status_reasons : {
-      code      = try(reason.code, null)
-      message   = try(reason.message, null)
-      more_info = try(reason.more_info, null)
-  }] : null
+  description = "Map of status reasons explaining the current connection state per connection."
+  value = {
+    for k, v in ibm_is_vpn_gateway_connection.vpn_site_to_site_connection :
+    k => length(try(v.status_reasons, [])) > 0 ? [
+      for reason in v.status_reasons : {
+        code      = try(reason.code, null)
+        message   = try(reason.message, null)
+        more_info = try(reason.more_info, null)
+      }
+    ] : null
+  }
 }
+
+# # Tunnels for route-based connections
+# output "vpn_tunnels" {
+#   description = "Map of VPN tunnel configurations (only for route mode connections)."
+#   value = {
+#     for k, v in ibm_is_vpn_gateway_connection.vpn_site_to_site_connection :
+#     k => v.mode == "route" ? [
+#       for tunnel in try(v.tunnels, []) : {
+#         address       = tunnel.address
+#         resource_type = tunnel.resource_type
+#       }
+#     ] : null
+#   }
+# }
 
 ##############################################################################
 # Routes
 ##############################################################################
 
 output "vpn_routes" {
-  description = "VPN routing information."
+  description = "VPN Routing information."
   value = (var.create_routes && var.vpn_gateway_mode == "route") ? {
     route_table_id = module.vpn_routes[0].route_table_id
     routes_count   = module.vpn_routes[0].routes_count
     created_routes = module.vpn_routes[0].created_routes
   } : null
-
 }
+
+##############################################################################
