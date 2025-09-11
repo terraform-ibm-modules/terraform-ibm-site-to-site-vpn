@@ -80,23 +80,23 @@ variable "vpn_connections" {
     dpd_check_interval        = optional(number, 2)               # Interval in seconds between dead peer detection checks for peer responsiveness.
     dpd_max_timeout           = optional(number, 10)              # Time in seconds to wait before considering the peer unreachable.
 
-    peer_config = list(object({
+    peer_config = optional(list(object({
       address = optional(string)
       fqdn    = optional(string)
-      cidrs   = optional(list(string))
+      cidrs   = optional(list(string), [])
       ike_identity = list(object({
         type  = string
         value = optional(string)
       }))
-    }))
+    })), [])
 
-    local_config = list(object({
-      cidrs = optional(list(string))
+    local_config = optional(list(object({
+      cidrs = optional(list(string), [])
       ike_identities = list(object({
         type  = string
         value = optional(string)
       }))
-    }))
+    })), [])
   }))
   default  = []
   nullable = false
@@ -168,7 +168,7 @@ variable "vpn_connections" {
 
   validation {
     condition = alltrue([
-      for conn in var.vpn_connections : alltrue([length(peer.peer_config) <= 1])
+      for conn in var.vpn_connections : length(conn.peer_config) <= 1
     ])
     error_message = "Only one Peer Configuration is allowed per connection."
   }
@@ -204,7 +204,7 @@ variable "vpn_connections" {
         ])
       ])
     ])
-    error_message = "For route-based VPN gateways, each 'local' entry must have exactly two ike_identities. For policy-based gateways, each 'local' entry may have at most one ike_identity."
+    error_message = "For Route based VPN gateways, each 'local' entry must have exactly two ike_identities. For policy-based gateways, each 'local' entry may have at most one ike_identity."
   }
 
   validation {

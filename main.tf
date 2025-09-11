@@ -65,21 +65,22 @@ locals {
 
 resource "ibm_is_vpn_gateway_connection" "vpn_site_to_site_connection" {
   depends_on         = [module.vpn_policies, time_sleep.wait_for_gateway_creation]
-  name               = var.vpn_gateway_connection_name
-  admin_state_up     = var.is_admin_state_up
+  for_each           = { for conn in var.vpn_connections : conn.name => conn }
   vpn_gateway        = local.vpn_gateway_id
-  preshared_key      = var.preshared_key
-  establish_mode     = var.establish_mode
   ike_policy         = local.ike_policy_id
   ipsec_policy       = local.ipsec_policy_id
-  distribute_traffic = var.vpn_gateway_mode == "route" ? var.enable_distribute_traffic : false
+  name               = each.key
+  admin_state_up     = each.value.is_admin_state_up
+  preshared_key      = sensitive(each.value.preshared_key)
+  establish_mode     = each.value.establish_mode
+  distribute_traffic = var.vpn_gateway_mode == "route" ? each.value.enable_distribute_traffic : false
 
   dynamic "peer" {
-    for_each = var.peer_config
+    for_each = each.value.peer_config
     content {
-      address = lookup(peer.value, "address", null)
-      fqdn    = lookup(peer.value, "fqdn", null)
-      cidrs   = lookup(peer.value, "cidrs", [])
+      address = peer.value.address
+      fqdn    = peer.value.fqdn
+      cidrs   = peer.value.cidrs
       dynamic "ike_identity" {
         for_each = peer.value.ike_identity
         content {
@@ -91,11 +92,11 @@ resource "ibm_is_vpn_gateway_connection" "vpn_site_to_site_connection" {
   }
 
   dynamic "local" {
-    for_each = var.local_config
+    for_each = each.value.local_config
     content {
       cidrs = local.value.cidrs
       dynamic "ike_identities" {
-        for_each = local.value.ike_identities
+        for_each = distinct(local.value.ike_identities)
         content {
           type  = ike_identities.value.type
           value = ike_identities.value.value
@@ -105,14 +106,13 @@ resource "ibm_is_vpn_gateway_connection" "vpn_site_to_site_connection" {
   }
 
   # DPD settings
-  action   = var.dpd_action
-  interval = var.dpd_check_interval
-  timeout  = var.dpd_max_timeout
+  action   = each.value.dpd_action
+  interval = each.value.dpd_check_interval
+  timeout  = each.value.dpd_max_timeout
 
   timeouts {
     delete = "1h"
   }
-
 }
 
 ##############################################################################
@@ -152,3 +152,13 @@ module "vpn_routes" {
   route_internet_ingress           = var.route_internet_ingress
   tags                             = var.tags
 }
+
+
+moved {
+  from = ibm_is_vpn_gateway_connection.vpn_site_to_site_connection
+  to   = ibm_is_vpn_gateway_connection.vpn_site_to_site_connection["default"]
+}
+
+# terraform state mv \
+#   'module.site2site.ibm_is_vpn_connection.connection' \
+#   'module.site2site.ibm_is_vpn_connection.connections["my-connection-name"]'
