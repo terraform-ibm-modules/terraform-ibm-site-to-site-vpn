@@ -67,162 +67,156 @@ variable "vpn_gateway_mode" {
 # VPN Gateway Connection Configuration
 ##############################################################################
 
-variable "vpn_gateway_connection_name" {
-  description = "Name of the VPN connection."
-  type        = string
-}
-
-variable "preshared_key" {
-  description = "Required to specify the authentication key of the VPN gateway for the network outside your VPC. [Learn More](https://cloud.ibm.com/docs/vpc?topic=vpc-vpn-create-gateway&interface=ui#planning-considerations-vpn)"
-  type        = string
-  sensitive   = true
-
-  validation {
-    condition     = length(var.preshared_key) >= 6 && length(var.preshared_key) <= 128
-    error_message = "Preshared key must be 6–128 characters long."
-  }
-
-  validation {
-    condition     = !startswith(var.preshared_key, "0x") && !startswith(var.preshared_key, "0s")
-    error_message = "Preshared key should not begin with '0x' or '0s'."
-  }
-
-  validation {
-    condition     = can(regex("^[-+&!@#$%^*().,:a-zA-Z0-9]+$", var.preshared_key))
-    error_message = "Preshared key can only contain digits, letters (a-z, A-Z), and these special characters: - + & ! @ # $ % ^ * ( ) . , :"
-  }
-}
-
-variable "peer_config" {
-  description = "Optional configuration for the remote peer VPN gateway. Includes peer address/FQDN, CIDRs, IKE identity type, and optional identity value."
+# Root variable for all VPN connections
+variable "vpn_connections" {
+  description = "List of VPN connections to attach to the VPN gateway."
   type = list(object({
-    address = optional(string)
-    fqdn    = optional(string)
-    cidrs   = optional(list(string))
-    ike_identity = list(object({
-      type  = string
-      value = optional(string)
+    name                      = string                            # Name of the VPN connection
+    preshared_key             = string                            # Required to specify the authentication key of the VPN gateway for the network outside your VPC. [Learn More](https://cloud.ibm.com/docs/vpc?topic=vpc-vpn-create-gateway&interface=ui#planning-considerations-vpn)
+    is_admin_state_up         = optional(bool, false)             # Flag to control the administrative state of the VPN gateway connection. If set to false (default), the connection is shut down. Set to true to enable the connection.
+    establish_mode            = optional(string, "bidirectional") # Determines IKE negotiation behavior for the VPN gateway connection. Use 'bidirectional' to allow both sides to initiate IKE negotiations and rekeying. Use 'peer_only' to restrict initiation and rekeying to the peer side.
+    enable_distribute_traffic = optional(bool, false)             # Flag for route-based VPN gateway connections to control traffic distribution across active tunnels. When true, traffic is load-balanced otherwise, it flows through the tunnel with the lower public IP.
+    dpd_action                = optional(string, "restart")       # Action to perform when the peer is unresponsive. Possible values are - 'restart', 'clear', 'hold', or 'none'.
+    dpd_check_interval        = optional(number, 2)               # Interval in seconds between dead peer detection checks for peer responsiveness.
+    dpd_max_timeout           = optional(number, 10)              # Time in seconds to wait before considering the peer unreachable.
+
+    peer_config = list(object({
+      address = optional(string)
+      fqdn    = optional(string)
+      cidrs   = optional(list(string))
+      ike_identity = list(object({
+        type  = string
+        value = optional(string)
+      }))
+    }))
+
+    local_config = list(object({
+      cidrs = optional(list(string))
+      ike_identities = list(object({
+        type  = string
+        value = optional(string)
+      }))
     }))
   }))
   default  = []
   nullable = false
+
+  # Preshared key Validations
   validation {
-    condition = length(var.peer_config) == 0 || alltrue([
-      for peer in var.peer_config : alltrue([
-        for id in peer.ike_identity : contains(["fqdn", "hostname",
-        "ipv4_address", "key_id"], id.type)
-      ])
+    condition = alltrue([
+      for conn in var.vpn_connections :
+      length(conn.preshared_key) >= 6 && length(conn.preshared_key) <= 128
     ])
-    error_message = "Each ike_identity 'type' must be one of: fqdn, hostname, ipv4_address, or key_id."
+    error_message = "Preshared key must be 6–128 characters long."
   }
 
   validation {
-    condition = length(var.peer_config) == 0 || alltrue([
-      for peer in var.peer_config : (peer.address != null && peer.address != "") || (peer.fqdn != null && peer.fqdn != "")
+    condition = alltrue([
+      for conn in var.vpn_connections :
+      !startswith(conn.preshared_key, "0x") && !startswith(conn.preshared_key, "0s")
+    ])
+    error_message = "Preshared key should not begin with '0x' or '0s'."
+  }
+
+  validation {
+    condition = alltrue([
+      for conn in var.vpn_connections :
+      can(regex("^[-+&!@#$%^*().,:a-zA-Z0-9]+$", conn.preshared_key))
+    ])
+    error_message = "Preshared key can only contain digits, letters (a-z, A-Z), and these special characters: - + & ! @ # $ % ^ * ( ) . , :"
+  }
+
+  # Establish mode Validation
+  validation {
+    condition = alltrue([
+      for conn in var.vpn_connections :
+      contains(["bidirectional", "peer_only"], conn.establish_mode)
+    ])
+    error_message = "establish_mode must be either 'bidirectional' or 'peer_only'."
+  }
+
+  # DPD (Dead Peer Detection) Validation
+  validation {
+    condition = alltrue([
+      for conn in var.vpn_connections :
+      contains(["restart", "clear", "hold", "none"], conn.dpd_action)
+    ])
+    error_message = "Please provide the correct dpd action value. Allowed values are - 'restart', 'clear', 'hold', or 'none'."
+  }
+
+  # Peer config Validations
+  validation {
+    condition = alltrue([
+      for conn in var.vpn_connections : alltrue([
+        for peer in conn.peer_config :
+        (peer.address != null && peer.address != "") || (peer.fqdn != null && peer.fqdn != "")
+      ])
     ])
     error_message = "Each peer must have either 'address' or 'fqdn' specified."
   }
 
   validation {
-    condition     = length(var.peer_config) <= 1
-    error_message = "Only one peer configuration is allowed per connection."
-  }
-
-  validation {
-    condition = length(var.peer_config) == 0 || alltrue([
-      for peer in var.peer_config :
-      var.vpn_gateway_mode == "route" || (peer.cidrs != null && length(coalesce(peer.cidrs, [])) > 0)
-    ])
-    error_message = "For policy-based VPN, each peer_config must define at least one CIDR."
-  }
-
-}
-
-variable "local_config" {
-  description = "Optional configuration for local IKE identities. Each entry in the list represents a VPN gateway member. For route-based VPN gateway each member must specify exactly 2 identities. For policy-based VPN gateway each member may provide at most 1 identity."
-  type = list(object({
-    cidrs = optional(list(string))
-    ike_identities = list(object({
-      type  = string
-      value = optional(string)
-    }))
-  }))
-  default  = []
-  nullable = false
-
-  validation {
-    condition = length(var.local_config) == 0 || alltrue([
-      for member in var.local_config : alltrue([
-        for id in member.ike_identities : contains(["fqdn", "hostname",
-        "ipv4_address", "key_id"], id.type)
+    condition = alltrue([
+      for conn in var.vpn_connections : alltrue([
+        for peer in conn.peer_config : alltrue([
+          for id in peer.ike_identity : contains(["fqdn", "hostname", "ipv4_address", "key_id"], id.type)
+        ])
       ])
     ])
-    error_message = "Each ike_identity 'type' must be one of: fqdn, hostname, ipv4_address, or key_id."
+    error_message = "Each peer_config.ike_identity.type must be one of: fqdn, hostname, ipv4_address, key_id."
   }
 
   validation {
-    condition = length(var.local_config) == 0 || alltrue([
-      for member in var.local_config :
-      var.vpn_gateway_mode == "route" ? length(member.ike_identities) == 2 : length(member.ike_identities) <= 1
+    condition = alltrue([
+      for conn in var.vpn_connections : alltrue([length(peer.peer_config) <= 1])
     ])
-    error_message = "For route-based VPN gateways, each 'local' entry must have exactly 2 ike_identities. For policy-based gateways, each 'local' entry may have at most 1 ike_identity."
+    error_message = "Only one Peer Configuration is allowed per connection."
   }
 
   validation {
-    condition = length(var.local_config) == 0 || alltrue([
-      for member in var.local_config :
-      var.vpn_gateway_mode == "route" || (member.cidrs != null && length(coalesce(member.cidrs, [])) > 0)
+    condition = alltrue([
+      for conn in var.vpn_connections : alltrue([
+        for peer in conn.peer_config : alltrue([
+          var.vpn_gateway_mode == "route" || (peer.cidrs != null && length(coalesce(peer.cidrs, [])) > 0)
+        ])
+      ])
     ])
-    error_message = "For policy-based VPN, each local_config must define at least one CIDR."
+    error_message = "For Policy based VPN, each peer_config must define at least one CIDR."
   }
 
-}
-
-variable "establish_mode" {
-  description = "Optional field to determine the IKE negotiation behavior for the VPN gateway connection. Use 'bidirectional' to allow both sides to initiate IKE negotiations and rekeying. Use 'peer_only' to restrict initiation and rekeying to the peer side."
-  type        = string
-  default     = "bidirectional"
+  # Local config Validations
   validation {
-    condition     = contains(["bidirectional", "peer_only"], var.establish_mode)
-    error_message = "establish_mode must be either 'bidirectional' or 'peer_only'."
+    condition = alltrue([
+      for conn in var.vpn_connections : alltrue([
+        for member in conn.local_config : alltrue([
+          for id in member.ike_identities : contains(["fqdn", "hostname", "ipv4_address", "key_id"], id.type)
+        ])
+      ])
+    ])
+    error_message = "Each local_config.ike_identity.type must be one of: fqdn, hostname, ipv4_address, key_id."
   }
-}
-
-
-variable "enable_distribute_traffic" {
-  description = "Optional flag for route-based VPN gateway connections to control traffic distribution across active tunnels. When true, traffic is load-balanced otherwise, it flows through the tunnel with the lower public IP."
-  type        = bool
-  default     = false
-}
-
-variable "is_admin_state_up" {
-  description = "Optional flag to control the administrative state of the VPN gateway connection. If set to false (default), the connection is shut down. Set to true to enable the connection."
-  type        = bool
-  default     = false
-}
-
-# DPD settings
-variable "dpd_action" {
-  description = "Optional action to perform when the peer is unresponsive. Possible values are - 'restart', 'clear', 'hold', or 'none'."
-  type        = string
-  default     = "restart"
 
   validation {
-    condition     = contains(["restart", "clear", "hold", "none"], var.dpd_action)
-    error_message = "Please provide the correct dpd action value. Allowed values are - 'restart', 'clear', 'hold', or 'none'"
+    condition = alltrue([
+      for conn in var.vpn_connections : alltrue([
+        for member in conn.local_config : alltrue([
+          var.vpn_gateway_mode == "route" ? length(member.ike_identities) == 2 : length(member.ike_identities) <= 1
+        ])
+      ])
+    ])
+    error_message = "For route-based VPN gateways, each 'local' entry must have exactly two ike_identities. For policy-based gateways, each 'local' entry may have at most one ike_identity."
   }
-}
 
-variable "dpd_check_interval" {
-  description = "Optional interval in seconds between dead peer detection checks for peer responsiveness."
-  type        = number
-  default     = 2
-}
-
-variable "dpd_max_timeout" {
-  description = "Optional time in seconds to wait before considering the peer unreachable."
-  type        = number
-  default     = 10
+  validation {
+    condition = alltrue([
+      for conn in var.vpn_connections : alltrue([
+        for member in conn.local_config : alltrue([
+          var.vpn_gateway_mode == "route" || (member.cidrs != null && length(coalesce(member.cidrs, [])) > 0)
+        ])
+      ])
+    ])
+    error_message = "For Policy based VPN, each local_config must define at least one CIDR."
+  }
 }
 
 ###############################################################################
