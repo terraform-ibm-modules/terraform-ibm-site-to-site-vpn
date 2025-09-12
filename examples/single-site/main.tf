@@ -45,10 +45,38 @@ resource "ibm_is_vpc_address_prefix" "prefix_zone_1" {
 ########################################################################################################################
 
 locals {
-  subnet_id           = ibm_is_subnet.subnet_zone_1.id
-  authentication_algo = "sha256"
-  encryption_algo     = "aes256"
-  vpn_gw_name         = "${var.prefix}-vpn-gateway"
+  subnet_id                 = ibm_is_subnet.subnet_zone_1.id
+  authentication_algo       = "sha256"
+  encryption_algo           = "aes256"
+  enable_distribute_traffic = true
+  vpn_gw_name               = "${var.prefix}-vpn-gateway"
+  vpn_conn = {
+    name          = "${var.prefix}-vpn-conn"
+    preshared_key = var.preshared_key
+    peer_config = [
+      {
+        address = var.remote_gateway_ip
+        cidrs   = [var.remote_cidr]
+        ike_identity = [
+          {
+            type  = "ipv4_address"
+            value = var.remote_gateway_ip
+          }
+        ]
+      }
+    ]
+    local_config = [
+      {
+        cidrs = [local.address_prefix_cidr]
+        ike_identities = [
+          {
+            type  = "ipv4_address"
+            value = module.vpn_gateway_single_site.vpn_gateway_public_ip
+          }
+        ]
+      }
+    ]
+  }
 }
 
 module "vpn_gateway_single_site" {
@@ -72,36 +100,8 @@ module "vpn_gateway_single_site" {
   ipsec_authentication_algorithm = local.authentication_algo
   ipsec_pfs                      = "group_14"
 
-  # Create Connection to Remote Peer
-
-  vpn_gateway_connection_name = "${var.prefix}-vpn-conn"
-  preshared_key               = var.preshared_key
-
-  # Peer Configuration (remote VPN gateway)
-  peer_config = [
-    {
-      address = var.remote_gateway_ip
-      cidrs   = [var.remote_cidr]
-      ike_identity = [
-        {
-          type  = "ipv4_address"
-          value = var.remote_gateway_ip
-        }
-      ]
-    }
-  ]
-  # Local Configuration
-  local_config = [
-    {
-      cidrs = [local.address_prefix_cidr]
-      ike_identities = [
-        {
-          type  = "ipv4_address"
-          value = module.vpn_gateway_single_site.vpn_gateway_public_ip
-        }
-      ]
-    }
-  ]
+  # Create VPN Connection
+  vpn_connections = [local.vpn_conn]
 
   # Skip routing table & routes for policy VPN
   create_route_table = false

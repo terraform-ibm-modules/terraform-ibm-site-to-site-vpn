@@ -1,3 +1,6 @@
+##############################################################################
+# VPC
+##############################################################################
 output "vpc_id" {
   description = "VPC ID"
   value       = ibm_is_vpc.vpc.id
@@ -8,16 +11,22 @@ output "subnet_id" {
   value       = ibm_is_subnet.subnet_zone_1.id
 }
 
+##############################################################################
+# Policies
+##############################################################################
 output "ike_policies" {
-  description = "IKE policies information"
+  description = "IKE policies information."
   value       = module.vpn_gateway_single_site.ike_policy
 }
 
 output "ipsec_policies" {
-  description = "IPSec policies information"
+  description = "IPSec policies information."
   value       = module.vpn_gateway_single_site.ipsec_policy
 }
 
+##############################################################################
+# VPN Gateway
+##############################################################################
 output "vpn_gateway_id" {
   description = "ID of the VPN gateway."
   value       = module.vpn_gateway_single_site.vpn_gateway_id
@@ -33,17 +42,22 @@ output "vpn_gateway_public_ip" {
   value       = module.vpn_gateway_single_site.vpn_gateway_public_ip
 }
 
-output "vpn_gateway_connection_status" {
+##############################################################################
+# VPN Gateway Connections
+##############################################################################
+output "vpn_gateway_connection_statuses" {
   description = "VPN Gateway Connection status."
-  value       = module.vpn_gateway_single_site.vpn_gateway_connection_status
+  value       = module.vpn_gateway_single_site.vpn_gateway_connection_statuses
 }
 
-output "vpn_gateway_connection_id" {
+output "vpn_gateway_connection_ids" {
   description = "Unique identifier of the VPN gateway connection."
-  value       = module.vpn_gateway_single_site.vpn_gateway_connection_id
+  value       = module.vpn_gateway_single_site.vpn_gateway_connection_ids
 }
 
-output "vpn_routes" {
+output "vpn_status_reasons" {
   description = "VPN routing information for site."
-  value       = module.vpn_gateway_single_site.vpn_routes
+  value       = module.vpn_gateway_single_site.vpn_status_reasons
 }
+
+##############################################################################
