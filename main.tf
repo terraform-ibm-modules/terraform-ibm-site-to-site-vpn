@@ -31,6 +31,7 @@ resource "ibm_is_vpn_gateway" "vpn_gateway" {
   subnet         = var.vpn_gateway_subnet_id
   tags           = var.tags
   timeouts {
+    create = "1h"
     delete = "1h"
   }
 }

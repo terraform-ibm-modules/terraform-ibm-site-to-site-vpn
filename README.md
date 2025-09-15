@@ -228,6 +228,10 @@ module "site_to_site_vpn" {
 
 ```
 
+### State Migration Guide:
+
+Please refer the [state migration](./State-Migration.md) document for more information.
+
 ### Required IAM access policies
 
 You need the following permissions to run this module.
