@@ -3,10 +3,10 @@ locals {
     var.create_route_table ? split("/", ibm_is_vpc_routing_table.vpn_routing_table[0].id)[1] : null
   )
 
-  # Combine existing and new routes only if route mode is enabled
-  all_routes = var.vpn_gateway_mode == "route" ? concat(var.existing_routes, var.vpn_routes) : []
+  # Combine existing and new routes
+  all_routes = concat(var.existing_routes, var.vpn_routes)
 
-  resolved_routes = var.vpn_gateway_mode == "route" ? {
+  resolved_routes = contains(["route", "policy"], var.vpn_gateway_mode) ? {
     for route in local.all_routes : route.name => {
       name                = route.name
       zone                = route.zone
@@ -64,7 +64,7 @@ resource "ibm_is_vpc_routing_table_route" "vpn_route" {
 
   for_each = {
     for name, route in local.resolved_routes : name => route
-    if(var.existing_route_table_id != null || var.create_route_table) && var.vpn_gateway_mode == "route"
+    if var.existing_route_table_id != null || var.create_route_table
   }
 
   vpc           = var.vpc_id

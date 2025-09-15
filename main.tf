@@ -126,7 +126,7 @@ locals {
 }
 
 module "vpn_routes" {
-  count                   = var.create_routes && var.vpn_gateway_mode == "route" ? 1 : 0
+  count                   = var.create_routes ? 1 : 0
   depends_on              = [ibm_is_vpn_gateway_connection.vpn_site_to_site_connection]
   source                  = "./modules/vpn_routing"
   vpc_id                  = var.vpc_id
