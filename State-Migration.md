@@ -2,9 +2,6 @@
 
 * In previous releases, this module supported only a single VPN connection. With the latest release, the module now supports a **list of VPN connections**.
 * As a result, the resource addresses in Terraform state have changed, and a one-time migration step is required.
-* Without this migration, Terraform may attempt to recreate existing VPN connections, which can cause downtime.
-
-Mentioned below are the steps to ensure a smooth migration:
 
 ## 1. Prepare for Migration
 

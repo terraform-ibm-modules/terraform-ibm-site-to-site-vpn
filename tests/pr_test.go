@@ -76,7 +76,7 @@ func setupOptions(t *testing.T, prefix string, exampleDir string) *testhelper.Te
 }
 
 // Provision Remote VPN Gateway
-func setupRemoteVPNGateway(t *testing.T, region string, prefix string) *terraform.Options {
+func setupRemoteVPNGateway(t *testing.T, region string, prefix string, isSingleSite bool) *terraform.Options {
 	realTerraformDir := "./resources"
 	tempTerraformDir, _ := files.CopyTerraformFolderToTemp(realTerraformDir, fmt.Sprintf(prefix+"-%s", strings.ToLower(random.UniqueId())))
 
@@ -89,8 +89,9 @@ func setupRemoteVPNGateway(t *testing.T, region string, prefix string) *terrafor
 	existingTerraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: tempTerraformDir,
 		Vars: map[string]interface{}{
-			"prefix": prefix,
-			"region": region,
+			"prefix":                       prefix,
+			"region":                       region,
+			"create_multiple_vpn_gateways": isSingleSite,
 		},
 		Upgrade: true,
 	})
@@ -122,7 +123,7 @@ func TestRunSingleSiteExample(t *testing.T) {
 
 	var region = validRegions[rand.Intn(len(validRegions))]
 	prefixExistingRes := fmt.Sprintf("ex-%s", strings.ToLower(random.UniqueId()))
-	existingTerraformOptions := setupRemoteVPNGateway(t, region, prefixExistingRes)
+	existingTerraformOptions := setupRemoteVPNGateway(t, region, prefixExistingRes, false)
 
 	// Test Single Site using existing VPC and VPN Gateway details
 	options := setupOptions(t, "site1", singleSiteExampleDir)
@@ -170,8 +171,7 @@ func TestRunMultipleVpnConnectionsExample(t *testing.T) {
 	// Provision Resources to be used by this example
 	var region = validRegions[rand.Intn(len(validRegions))]
 	prefixExistingRes := fmt.Sprintf("ex-%s", strings.ToLower(random.UniqueId()))
-	existingTerraformOptions := setupRemoteVPNGateway(t, region, prefixExistingRes)
-	existingTerraformOptions.Vars["create_multiple_vpn_gateways"] = true
+	existingTerraformOptions := setupRemoteVPNGateway(t, region, prefixExistingRes, true)
 
 	// Test Multiple connections using existing VPC and VPN Gateway details
 	options := setupOptions(t, "mconn", multipleConnExampleDir)
