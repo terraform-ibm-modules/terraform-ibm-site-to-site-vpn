@@ -3,7 +3,7 @@
 ##############################################################################
 
 output "existing_subnet_id" {
-  value       = ibm_is_subnet.subnet_zone_1.id
+  value       = ibm_is_subnet.subnet_zone_1[0].id
   description = "The subnet ID."
 }
 
