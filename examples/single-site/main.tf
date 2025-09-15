@@ -45,13 +45,18 @@ resource "ibm_is_vpc_address_prefix" "prefix_zone_1" {
 ########################################################################################################################
 
 locals {
+  connection_name           = "${var.prefix}-vpn-conn"
   subnet_id                 = ibm_is_subnet.subnet_zone_1.id
   authentication_algo       = "sha256"
   encryption_algo           = "aes256"
   enable_distribute_traffic = true
   vpn_gw_name               = "${var.prefix}-vpn-gateway"
+
+  valid_ip_address = module.vpn_gateway_single_site.vpn_gateway_public_ip == "0.0.0.0" ? module.vpn_gateway_single_site.vpn_gateway_public_ip_2 : module.vpn_gateway_single_site.vpn_gateway_public_ip
+
+  # VPN Connection
   vpn_conn = {
-    name          = "${var.prefix}-vpn-conn"
+    name          = local.connection_name
     preshared_key = var.preshared_key
     peer_config = [
       {
@@ -71,7 +76,7 @@ locals {
         ike_identities = [
           {
             type  = "ipv4_address"
-            value = module.vpn_gateway_single_site.vpn_gateway_public_ip
+            value = local.valid_ip_address
           }
         ]
       }
@@ -80,21 +85,24 @@ locals {
 }
 
 module "vpn_gateway_single_site" {
-  source                = "../.."
-  resource_group_id     = module.resource_group.resource_group_id
+  source            = "../.."
+  resource_group_id = module.resource_group.resource_group_id
+  tags              = var.tags
+
+  # VPN Gateway
   create_vpn_gateway    = true
-  tags                  = var.tags
   vpn_gateway_name      = local.vpn_gw_name
   vpn_gateway_subnet_id = local.subnet_id
   vpn_gateway_mode      = "policy" # Policy Based VPN
 
   # Policies
-
-  create_vpn_policies            = true
-  ike_policy_name                = "${var.prefix}-ike-policy"
-  ike_authentication_algorithm   = local.authentication_algo
-  ike_encryption_algorithm       = local.encryption_algo
-  ike_dh_group                   = 14
+  create_vpn_policies = true
+  # IKE
+  ike_policy_name              = "${var.prefix}-ike-policy"
+  ike_authentication_algorithm = local.authentication_algo
+  ike_encryption_algorithm     = local.encryption_algo
+  ike_dh_group                 = 14
+  # IPSec
   ipsec_policy_name              = "${var.prefix}-ipsec-policy"
   ipsec_encryption_algorithm     = local.encryption_algo
   ipsec_authentication_algorithm = local.authentication_algo

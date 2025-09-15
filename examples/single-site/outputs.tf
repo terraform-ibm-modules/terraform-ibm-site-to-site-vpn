@@ -32,32 +32,31 @@ output "vpn_gateway_id" {
   value       = module.vpn_gateway_single_site.vpn_gateway_id
 }
 
-output "vpn_gateway_crn_site_a" {
+output "vpn_gateway_crn" {
   description = "CRN of the VPN gateway."
   value       = module.vpn_gateway_single_site.vpn_gateway_crn
 }
 
 output "vpn_gateway_public_ip" {
   description = "VPN Gateway public IP."
-  value       = module.vpn_gateway_single_site.vpn_gateway_public_ip
+  value       = local.valid_ip_address
 }
 
 ##############################################################################
-# VPN Gateway Connections
+# VPN Gateway Connection
 ##############################################################################
-output "vpn_gateway_connection_statuses" {
+output "vpn_gateway_connection_status" {
   description = "VPN Gateway Connection status."
-  value       = module.vpn_gateway_single_site.vpn_gateway_connection_statuses
+  value       = module.vpn_gateway_single_site.vpn_gateway_connection_statuses[local.connection_name]
 }
 
-output "vpn_gateway_connection_ids" {
+output "vpn_gateway_connection_id" {
   description = "Unique identifier of the VPN gateway connection."
-  value       = module.vpn_gateway_single_site.vpn_gateway_connection_ids
+  value       = module.vpn_gateway_single_site.vpn_gateway_connection_ids[local.connection_name]
 }
 
-output "vpn_status_reasons" {
-  description = "VPN routing information for site."
-  value       = module.vpn_gateway_single_site.vpn_status_reasons
+output "vpn_gateway_connection_mode" {
+  description = "VPN gateway connection mode."
+  value       = module.vpn_gateway_single_site.vpn_gateway_connection_modes[local.connection_name]
 }
-
 ##############################################################################

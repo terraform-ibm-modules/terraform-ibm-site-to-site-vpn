@@ -14,10 +14,10 @@ output "vpn_gateway_public_ip" {
 
 output "vpn_gateway_connection_id" {
   description = "VPN connection ID for the new test connection"
-  value       = module.vpn_connection_to_site_c.vpn_gateway_connection_id
+  value       = module.vpn_connection_to_site_c.vpn_gateway_connection_ids[local.connection_name]
 }
 
 output "vpn_connection_status" {
   description = "VPN connection status for the new test connection"
-  value       = module.vpn_connection_to_site_c.vpn_gateway_connection_status
+  value       = module.vpn_connection_to_site_c.vpn_gateway_connection_statuses[local.connection_name]
 }

@@ -152,6 +152,8 @@ module "site_to_site_vpn" {
   vpn_gateway_name               = "xxxxx" # Name of the VPN Gateway
   vpn_gateway_subnet_id          = "s..12" # Subnet id where VPN Gateway will be created
   vpn_gateway_mode               = "route" # Can be route or policy
+
+  # Policies
   create_vpn_policies            = true
   ike_policy_name                = "xxx-ike-policy" # Name of the IKE Policy
   ike_authentication_algorithm   = "sha256" # Choose the relevant authentication algorithm
@@ -162,55 +164,63 @@ module "site_to_site_vpn" {
   ipsec_encryption_algorithm     = "aes256" # Choose the relevant encryption algorithm
   ipsec_pfs                      = "group_14" # Perfect Forward Secrecy (PFS) protocol value
 
-  # Create Connection to Remote Peer
-  vpn_gateway_connection_name   = "xxx-vpn-conn" # VPN Connection name
-  preshared_key     = "XXXXXX"
-
-  # Peer Configuration (remote VPN gateway)
-  peer_config = [
+  # VPN Connections
+  vpn_connections = [
     {
-      address = "X.X.X.X" # Remote Gateway IP address
-      ike_identity = [
+      name         = "xxx-vpn-conn" # VPN Connection name
+      peer_address = "X.X.X.X" # Remote VPN gateway IP
+      preshared_key = "XXXXXX"
+
+      # Peer Configuration (remote VPN gateway)
+      peer_config = [
         {
-          type  = "ipv4_address"
-          value = "X.X.X.X" # Remote Gateway IP address
+          address = "X.X.X.X" # Remote Gateway IP address
+          cidrs = [X.X.X.X] # Provide CIDRs (Required for Policy based VPN.)
+          ike_identity = [
+            {
+              type  = "ipv4_address"
+              value = "X.X.X.X" # Remote Gateway IP address
+            }
+          ]
+        }
+      ]
+      # Local Configuration
+      local_config = [
+        {
+          cidrs = ["10.10.0.0/16"]  # Local VPC CIDRs
+          # Minimum of 2 IKE Identities are required for Route based VPN and atmost 1 for Policy based VPN
+          ike_identities = [
+            {
+              type  = "ipv4_address"
+              value = module.vpn_gateway.vpn_gateway_public_ip # Use the VPN gateway id
+            },
+            {
+              type  = "ipv4_address"
+              value = module.vpn_gateway.vpn_gateway_public_ip # Use the VPN gateway id
+            }
+          ]
         }
       ]
     }
   ]
-  # Local Configuration
-  local_config = [
-    {
-      cidrs = ["10.10.0.0/16"]  # Local VPC CIDRs
-      # Minimum of 2 IKE Identities are required
-      ike_identities = [
-        {
-          type  = "ipv4_address"
-          value = module.vpn_gateway.vpn_gateway_public_ip # Use the VPN gateway id
-        },
-        {
-          type  = "ipv4_address"
-          value = module.vpn_gateway.vpn_gateway_public_ip # Use the VPN gateway id
-        }
-      ]
-    }
-  ]
 
-  # Routing table and Routes creation
-  create_route_table               = true
+  # Routing table and Routes creation (For Route Based VPNs only)
+  create_route_table               = true # If using Policy based VPN, set this to false
   routing_table_name               = "xxx-rt" # Name of Routing Table
   accept_routes_from_resource_type = ["vpn_gateway"]
   route_attach_subnet                    = true
   route_subnet_id                        = "s...123" # Subnet id where VPN Gateway is created
+
   # Add routes
-  create_routes = true
+  create_routes = true # If using Policy based VPN, set this to false
   vpc_id        = "vpc-xxxx" # Provide VPC Id.
   routes = [
     {
       name             = "example-vpn-route-1"
       vpn_gateway_name = "xxxxx" # Name of the VPN Gateway
       zone             = "zone-1"
-      next_hop         = module.site_to_site_vpn.vpn_gateway_id
+      next_hop         = null # This will be resolved using Connection name
+      vpn_connection_name = "xxxx" # Name of the VPN Connection
       destination      = "X.X.X.X" # Provide Remote CIDR
     }
   ]
