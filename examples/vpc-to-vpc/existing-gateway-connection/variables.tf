@@ -44,6 +44,7 @@ variable "local_gateway_ip" {
 }
 
 variable "local_gateway_secondary_ip" {
+  type        = string
   description = "Secondary Public IP address of the existing VPN gateway."
   default     = "1.2.3.4" # Placeholder - user should replace with actual IP
 }

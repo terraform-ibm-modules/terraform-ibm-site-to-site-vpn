@@ -42,7 +42,7 @@ output "vpn_gateway_crn" {
 
 output "vpn_gateway_public_ip" {
   description = "VPN Gateway public IP."
-  value       = module.vpn_gateway_with_multiple_connections.vpn_gateway_public_ip
+  value       = local.valid_ip_address
 }
 
 ##############################################################################
@@ -55,11 +55,7 @@ output "vpn_gateway_connection_statuses" {
 }
 
 output "vpn_gateway_connection_ids" {
-  description = "Unique identifier of the VPN gateway connection."
+  description = "Unique identifier of the VPN gateway connections."
   value       = module.vpn_gateway_with_multiple_connections.vpn_gateway_connection_ids
 }
-
-output "vpn_status_reasons" {
-  description = "VPN routing information for site."
-  value       = module.vpn_gateway_with_multiple_connections.vpn_status_reasons
-}
+##############################################################################

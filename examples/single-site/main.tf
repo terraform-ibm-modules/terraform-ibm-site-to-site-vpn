@@ -45,12 +45,11 @@ resource "ibm_is_vpc_address_prefix" "prefix_zone_1" {
 ########################################################################################################################
 
 locals {
-  connection_name           = "${var.prefix}-vpn-conn"
-  subnet_id                 = ibm_is_subnet.subnet_zone_1.id
-  authentication_algo       = "sha256"
-  encryption_algo           = "aes256"
-  enable_distribute_traffic = true
-  vpn_gw_name               = "${var.prefix}-vpn-gateway"
+  connection_name     = "${var.prefix}-vpn-conn"
+  subnet_id           = ibm_is_subnet.subnet_zone_1.id
+  authentication_algo = "sha256"
+  encryption_algo     = "aes256"
+  vpn_gw_name         = "${var.prefix}-vpn-gateway"
 
   valid_ip_address = module.vpn_gateway_single_site.vpn_gateway_public_ip == "0.0.0.0" ? module.vpn_gateway_single_site.vpn_gateway_public_ip_2 : module.vpn_gateway_single_site.vpn_gateway_public_ip
 

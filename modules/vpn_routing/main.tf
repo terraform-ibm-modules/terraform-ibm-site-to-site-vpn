@@ -5,6 +5,25 @@ locals {
 
   # Combine existing and new routes only if route mode is enabled
   all_routes = var.vpn_gateway_mode == "route" ? concat(var.existing_routes, var.vpn_routes) : []
+
+  resolved_routes = var.vpn_gateway_mode == "route" ? {
+    for route in local.all_routes : route.name => {
+      name                = route.name
+      zone                = route.zone
+      destination         = route.destination
+      action              = route.action
+      advertise           = route.advertise
+      priority            = route.priority
+      vpn_connection_name = route.vpn_connection_name
+      # Resolve the next_hop based on whether it's a connection reference or direct value
+      next_hop = (
+        route.action == "deliver" && contains(keys(var.vpn_connection_ids), route.vpn_connection_name) ?
+        var.vpn_connection_ids[route.vpn_connection_name] :
+        route.next_hop
+      )
+    }
+  } : {}
+
 }
 
 ########################################
@@ -44,7 +63,7 @@ resource "ibm_is_vpc_routing_table_route" "vpn_route" {
   ]
 
   for_each = {
-    for _, route in local.all_routes : route.name => route
+    for name, route in local.resolved_routes : name => route
     if(var.existing_route_table_id != null || var.create_route_table) && var.vpn_gateway_mode == "route"
   }
 

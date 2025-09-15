@@ -26,6 +26,7 @@ const resourceGroup = "geretain-test-resources"
 
 const vpcTovpcExampleDir = "examples/vpc-to-vpc"
 const singleSiteExampleDir = "examples/single-site"
+const multipleConnExampleDir = "examples/multiple-vpn-connections"
 
 // Define a struct with fields that match the structure of the YAML data
 const yamlLocation = "../common-dev-assets/common-go-assets/common-permanent-resources.yaml"
@@ -161,4 +162,29 @@ func TestRunVpcToVpcExample(t *testing.T) {
 	output, err := options.RunTestConsistency()
 	assert.Nil(t, err, "This should not have errored")
 	assert.NotNil(t, output, "Expected some output")
+}
+
+func TestRunMultipleVpnConnectionsExample(t *testing.T) {
+	t.Parallel()
+
+	// Provision Resources to be used by this example
+	var region = validRegions[rand.Intn(len(validRegions))]
+	prefixExistingRes := fmt.Sprintf("ex-%s", strings.ToLower(random.UniqueId()))
+	existingTerraformOptions := setupRemoteVPNGateway(t, region, prefixExistingRes)
+	existingTerraformOptions.Vars["create_multiple_vpn_gateways"] = true
+
+	// Test Multiple connections using existing VPC and VPN Gateway details
+	options := setupOptions(t, "mconn", multipleConnExampleDir)
+	options.TerraformVars["remote_gateway_ip"] = terraform.Output(t, existingTerraformOptions, "vpn_gateway_public_ip")
+	options.TerraformVars["remote_cidr"] = terraform.Output(t, existingTerraformOptions, "remote_cidr")
+	options.TerraformVars["remote_gateway_ip_2"] = terraform.Output(t, existingTerraformOptions, "vpn_gateway_public_ip_2")
+	options.TerraformVars["remote_cidr_2"] = terraform.Output(t, existingTerraformOptions, "remote_cidr")
+
+	// Run consistency checks
+	output, err := options.RunTestConsistency()
+	assert.Nil(t, err, "This should not have errored")
+	assert.NotNil(t, output, "Expected some output")
+
+	// Cleanup the resources provisioned to run this example.
+	cleanupResources(t, existingTerraformOptions, prefixExistingRes)
 }

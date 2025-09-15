@@ -53,6 +53,7 @@ locals {
 
 locals {
 
+  valid_ip_address = module.vpn_gateway_with_multiple_connections.vpn_gateway_public_ip == "0.0.0.0" ? module.vpn_gateway_with_multiple_connections.vpn_gateway_public_ip_2 : module.vpn_gateway_with_multiple_connections.vpn_gateway_public_ip
   vpn_connection_1 = {
     name           = "${var.prefix}-vpn-conn-1"
     preshared_key  = var.preshared_key
@@ -76,7 +77,7 @@ locals {
         ike_identities = [
           {
             type  = "ipv4_address"
-            value = module.vpn_gateway_with_multiple_connections.vpn_gateway_public_ip
+            value = local.valid_ip_address
           }
         ]
       }

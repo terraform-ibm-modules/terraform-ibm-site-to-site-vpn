@@ -139,27 +139,35 @@ variable "vpn_gateway_mode" {
 variable "existing_routes" {
   description = "List of existing route configurations to use."
   type = list(object({
-    destination = string
-    next_hop    = string
-    zone        = string
-    name        = optional(string)
-    action      = optional(string, "deliver")
-    advertise   = optional(bool, false)
-    priority    = optional(number, 2)
+    destination         = string
+    next_hop            = string
+    zone                = string
+    name                = optional(string)
+    action              = optional(string, "deliver")
+    advertise           = optional(bool, false)
+    priority            = optional(number, 2)
+    vpn_connection_name = optional(string, null)
   }))
   default = []
+}
+
+variable "vpn_connection_ids" {
+  description = "Map of VPN connection names to their IDs"
+  type        = map(string)
+  default     = {}
 }
 
 variable "vpn_routes" {
   description = "List of VPN routes to create."
   type = list(object({
-    destination = string
-    next_hop    = string
-    zone        = string
-    name        = optional(string)
-    action      = optional(string, "deliver")
-    advertise   = optional(bool, false)
-    priority    = optional(number, 2)
+    destination         = string
+    next_hop            = string
+    zone                = string
+    name                = optional(string)
+    action              = optional(string, "deliver")
+    advertise           = optional(bool, false)
+    priority            = optional(number, 2)
+    vpn_connection_name = optional(string, null) # This is required to attach routes with multiple connections.
   }))
   default  = []
   nullable = false

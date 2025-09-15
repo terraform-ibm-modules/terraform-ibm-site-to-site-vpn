@@ -341,13 +341,14 @@ variable "create_routes" {
 variable "routes" {
   description = "List of routes to create."
   type = list(object({
-    name        = string
-    zone        = string
-    destination = string
-    next_hop    = string
-    action      = optional(string, "deliver")
-    advertise   = optional(bool, false)
-    priority    = optional(number, 2)
+    name                = string
+    zone                = string
+    destination         = string
+    next_hop            = string
+    action              = optional(string, "deliver")
+    advertise           = optional(bool, false)
+    priority            = optional(number, 2)
+    vpn_connection_name = optional(string, null)
   }))
   default  = []
   nullable = false

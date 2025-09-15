@@ -119,6 +119,12 @@ resource "ibm_is_vpn_gateway_connection" "vpn_site_to_site_connection" {
 # VPC Routing Table and VPN Routes
 ##############################################################################
 
+locals {
+  vpn_connection_ids = {
+    for k, v in ibm_is_vpn_gateway_connection.vpn_site_to_site_connection : k => v.gateway_connection
+  }
+}
+
 module "vpn_routes" {
   count                   = var.create_routes && var.vpn_gateway_mode == "route" ? 1 : 0
   depends_on              = [ibm_is_vpn_gateway_connection.vpn_site_to_site_connection]
@@ -130,17 +136,21 @@ module "vpn_routes" {
   route_attach_subnet     = var.route_attach_subnet
   subnet_id_to_attach     = var.route_subnet_id
   vpn_gateway_mode        = var.vpn_gateway_mode
+  vpn_connection_ids      = local.vpn_connection_ids
+
   vpn_routes = [
     for route in var.routes : {
-      name        = route.name
-      zone        = route.zone
-      destination = route.destination
-      action      = route.action
-      advertise   = route.advertise
-      priority    = route.priority
-      next_hop    = route.next_hop
+      name                = route.name
+      zone                = route.zone
+      destination         = route.destination
+      action              = route.action
+      advertise           = route.advertise
+      priority            = route.priority
+      next_hop            = route.next_hop
+      vpn_connection_name = lookup(route, "vpn_connection_name", null)
     }
   ]
+
   existing_routes = []
 
   # Routing table configuration

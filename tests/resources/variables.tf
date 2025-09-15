@@ -6,7 +6,7 @@ variable "ibmcloud_api_key" {
 
 variable "region" {
   type        = string
-  description = "Region to provision all resources created by this example."
+  description = "Region to provision all resources required to create VPN."
   default     = "us-south"
 }
 
@@ -19,4 +19,10 @@ variable "resource_tags" {
   type        = list(string)
   description = "Optional list of tags to be added to created resources."
   default     = []
+}
+
+variable "create_multiple_vpn_gateways" {
+  type        = bool
+  description = "Flag to allow creation of secondary VPN , required for multiple connections example."
+  default     = false
 }

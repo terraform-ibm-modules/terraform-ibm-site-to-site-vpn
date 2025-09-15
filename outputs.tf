@@ -38,8 +38,17 @@ output "vpn_gateway_crn" {
 }
 
 output "vpn_gateway_public_ip" {
-  description = "Resolved public IP address from either `public_ip_address` or `public_ip_address2`. [Learn more](https://registry.terraform.io/providers/IBM-cloud/ibm/1.80.4/docs/resources/is_vpn_gateway#public_ip_address2-4)"
-  value       = var.create_vpn_gateway ? (ibm_is_vpn_gateway.vpn_gateway[0].public_ip_address == "0.0.0.0" ? ibm_is_vpn_gateway.vpn_gateway[0].public_ip_address2 : ibm_is_vpn_gateway.vpn_gateway[0].public_ip_address) : null
+  description = "The IP address assigned to the VPN gateway. [Learn more](https://registry.terraform.io/providers/IBM-Cloud/ibm/latest/docs/resources/is_vpn_gateway#public_ip_address-1)"
+  value       = var.create_vpn_gateway ? ibm_is_vpn_gateway.vpn_gateway[0].public_ip_address : null
+}
+
+# output "vpn_gateway_public_ip" {
+#   description = "The IP address assigned to the VPN gateway. [Learn more](https://registry.terraform.io/providers/IBM-Cloud/ibm/latest/docs/resources/is_vpn_gateway#public_ip_address-1)"
+#   value       = var.create_vpn_gateway ? (ibm_is_vpn_gateway.vpn_gateway[0].public_ip_address == "0.0.0.0" ? ibm_is_vpn_gateway.vpn_gateway[0].public_ip_address2 : ibm_is_vpn_gateway.vpn_gateway[0].public_ip_address) : null
+# }
+output "vpn_gateway_public_ip_2" {
+  description = "The Second Public IP address assigned to the VPN gateway member. [Learn more](https://registry.terraform.io/providers/IBM-Cloud/ibm/latest/docs/resources/is_vpn_gateway#private_ip_address2-1)"
+  value       = var.create_vpn_gateway ? ibm_is_vpn_gateway.vpn_gateway[0].public_ip_address2 : null
 }
 
 output "vpn_gateway_members" {
