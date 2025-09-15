@@ -175,7 +175,7 @@ module "site_to_site_vpn" {
       peer_config = [
         {
           address = "X.X.X.X" # Remote Gateway IP address
-          cidrs = [X.X.X.X] # Provide CIDRs (Required for Policy based VPN.)
+          cidrs = [X.X.X.X] # Provide CIDRs (Required for Policy based VPN)
           ike_identity = [
             {
               type  = "ipv4_address"
@@ -204,15 +204,15 @@ module "site_to_site_vpn" {
     }
   ]
 
-  # Routing table and Routes creation (For Route Based VPNs only)
-  create_route_table               = true # If using Policy based VPN, set this to false
+  # Routing table and Routes creation
+  create_route_table               = true
   routing_table_name               = "xxx-rt" # Name of Routing Table
   accept_routes_from_resource_type = ["vpn_gateway"]
   route_attach_subnet                    = true
   route_subnet_id                        = "s...123" # Subnet id where VPN Gateway is created
 
   # Add routes
-  create_routes = true # If using Policy based VPN, set this to false
+  create_routes = true
   vpc_id        = "vpc-xxxx" # Provide VPC Id.
   routes = [
     {

@@ -4,7 +4,7 @@
 * As a result, the resource addresses in Terraform state have changed, and a one-time migration step is required.
 * Without this migration, Terraform may attempt to recreate existing VPN connections, which can cause downtime.
 
-Mentioned below are the steps to ensure a smooth migration: 
+Mentioned below are the steps to ensure a smooth migration:
 
 ## 1. Prepare for Migration
 
@@ -185,7 +185,7 @@ module "vpn_gateway_site_b" {
 
 ### Relation to State Migration
 
-Because resources are now indexed by the name field in `vpn_connections`, you must also run the state migration step as described above. 
+Because resources are now indexed by the name field in `vpn_connections`, you must also run the state migration step as described above.
 
 This ensures Terraform links your existing resource to the correct object in the new variable structure.
 
