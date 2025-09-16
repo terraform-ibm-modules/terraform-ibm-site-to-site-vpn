@@ -18,8 +18,8 @@ This module automates the provisioning of a site-to-site VPN. For more informati
 * [Examples](./examples)
     * [Adding Connection to Existing VPN Gateway](./examples/vpc-to-vpc/existing-gateway-connection)
     * [VPC to VPC Example](./examples/vpc-to-vpc)
-    * [](./examples/multiple-vpn-connections)
-    * [](./examples/single-site)
+    * [Multiple VPN Connections Example](./examples/multiple-vpn-connections)
+    * [Single Site Example](./examples/single-site)
 * [Contributing](#contributing)
 <!-- END OVERVIEW HOOK -->
 
