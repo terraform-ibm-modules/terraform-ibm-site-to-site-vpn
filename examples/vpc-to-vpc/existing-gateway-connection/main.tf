@@ -11,6 +11,40 @@ module "resource_group" {
 ## Simple VPN Connection to Existing Gateway - Testing Only
 ########################################################################################################################
 
+locals {
+  connection_name = "${var.prefix}-test-connection"
+  vpn_conn = {
+    name          = local.connection_name
+    preshared_key = var.preshared_key
+    peer_config = [
+      {
+        address = var.remote_site_c_ip
+        ike_identity = [
+          {
+            type  = "ipv4_address"
+            value = var.remote_site_c_ip
+          }
+        ]
+      }
+    ]
+
+    local_config = [
+      {
+        ike_identities = [
+          {
+            type  = "ipv4_address"
+            value = var.local_gateway_ip
+          },
+          {
+            type  = "ipv4_address"
+            value = var.local_gateway_secondary_ip
+          }
+        ]
+      }
+    ]
+  }
+}
+
 module "vpn_connection_to_site_c" {
   source = "../../.."
 
@@ -33,38 +67,8 @@ module "vpn_connection_to_site_c" {
   ipsec_authentication_algorithm = "sha256"
   ipsec_pfs                      = "group_14"
 
-  # Create simple connection
-  vpn_gateway_connection_name = "${var.prefix}-test-connection"
-  preshared_key               = var.preshared_key
-
-  # Simple peer configuration
-  peer_config = [
-    {
-      address = var.remote_site_c_ip
-      ike_identity = [
-        {
-          type  = "ipv4_address"
-          value = var.remote_site_c_ip
-        }
-      ]
-    }
-  ]
-
-  # Simple local configuration
-  local_config = [
-    {
-      ike_identities = [
-        {
-          type  = "ipv4_address"
-          value = var.local_gateway_ip
-        },
-        {
-          type  = "ipv4_address"
-          value = var.local_gateway_ip
-        }
-      ]
-    }
-  ]
+  # Create VPN Connection
+  vpn_connections = [local.vpn_conn]
 
   # No routing - just testing the connection creation
   create_routes      = false

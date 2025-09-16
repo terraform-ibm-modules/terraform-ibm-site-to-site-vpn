@@ -2,62 +2,31 @@
 # # Outputs
 # ########################################################################################################################
 
-output "vpc_id_site_a" {
-  description = "VPC ID of Site A."
-  value       = local.vpc_id_site_a
-}
-
-output "vpc_id_site_b" {
-  description = "VPC ID of Site B."
-  value       = local.vpc_id_site_b
-}
-
-output "vsi_private_ip_site_a" {
-  description = "Site A VSI private IP"
-  value       = ibm_is_instance.vsi_site_a[0].primary_network_attachment[0].primary_ip[0].address
-}
-
-output "vsi_private_ip_site_b" {
-  description = "Site B VSI private IP"
-  value       = ibm_is_instance.vsi_site_b[0].primary_network_attachment[0].primary_ip[0].address
-}
-
-output "vpn_gateway_ips" {
-  description = "VPN Gateway public IPs of Site A and Site B."
+##############################################################################
+# VPC
+##############################################################################
+output "vpc_ids" {
+  description = "VPC IDs of Site A and Site B."
   value = {
-    site_a = module.vpn_gateway_site_a.vpn_gateway_public_ip
-    site_b = module.vpn_gateway_site_b.vpn_gateway_public_ip
+    site_a = local.vpc_id_site_a
+    site_b = local.vpc_id_site_b
   }
 }
 
-output "vpn_connections_status_site_a" {
-  description = "VPN connections status for Site A."
-  value       = module.vpn_gateway_site_a.vpn_gateway_connection_status
+output "vsi_private_ips" {
+  description = "Site A and Site B VSI private IP"
+  value = {
+    site_a = ibm_is_instance.vsi_site_a[0].primary_network_attachment[0].primary_ip[0].address
+    site_b = ibm_is_instance.vsi_site_b[0].primary_network_attachment[0].primary_ip[0].address
+  }
 }
 
-output "vpn_connections_status_site_b" {
-  description = "VPN connections status for Site B."
-  value       = module.vpn_gateway_site_b.vpn_gateway_connection_status
-}
-
-output "floating_ip_address_site_a" {
-  description = "Public Floating IP address of the VSI for site A."
-  value       = ibm_is_floating_ip.floating_ip_vsi_site_a.address
-}
-
-output "floating_ip_address_site_b" {
-  description = "Public Floating IP address of the VSI for site B."
-  value       = ibm_is_floating_ip.floating_ip_vsi_site_b.address
-}
-
-output "vpn_routes_site_a" {
-  description = "VPN routing information for site A."
-  value       = module.vpn_gateway_site_a.vpn_routes
-}
-
-output "vpn_routes_site_b" {
-  description = "VPN routing information for site B."
-  value       = module.vpn_gateway_site_b.vpn_routes
+output "floating_ip_address" {
+  description = "Public Floating IP address of the VSIs for site A and site B."
+  value = {
+    site_a = ibm_is_floating_ip.floating_ip_vsi_site_a.address
+    site_b = ibm_is_floating_ip.floating_ip_vsi_site_b.address
+  }
 }
 
 output "private_key" {
@@ -66,22 +35,62 @@ output "private_key" {
   sensitive   = true
 }
 
-output "vpn_gateway_id_site_a" {
-  description = "ID of the Site A VPN gateway."
-  value       = module.vpn_gateway_site_a.vpn_gateway_id
+##############################################################################
+# VPN Gateway
+##############################################################################
+output "vpn_gateway_ips" {
+  description = "VPN Gateway public IPs of Site A and Site B."
+  value = {
+    site_a = local.peer_ip_for_site_b
+    site_b = local.peer_ip_for_site_a
+  }
 }
 
-output "vpn_gateway_id_site_b" {
-  description = "ID of the Site B VPN gateway."
-  value       = module.vpn_gateway_site_b.vpn_gateway_id
+output "vpn_gateway_ids" {
+  description = "VPN Gateway IDs of the Site A and Site B."
+  value = {
+    site_a = module.vpn_gateway_site_a.vpn_gateway_id
+    site_b = module.vpn_gateway_site_b.vpn_gateway_id
+  }
 }
 
-output "vpn_gateway_crn_site_a" {
-  description = "CRN of the Site A VPN gateway."
-  value       = module.vpn_gateway_site_a.vpn_gateway_crn
+output "vpn_gateway_crns" {
+  description = "CRN of the Site A and Site B VPN gateway."
+  value = {
+    site_a = module.vpn_gateway_site_a.vpn_gateway_crn
+    site_b = module.vpn_gateway_site_b.vpn_gateway_crn
+  }
 }
 
-output "vpn_gateway_crn_site_b" {
-  description = "CRN of the Site B VPN gateway."
-  value       = module.vpn_gateway_site_b.vpn_gateway_crn
+##############################################################################
+# VPN Gateway Connections
+##############################################################################
+
+output "vpn_connections_status" {
+  description = "VPN Gateway Connection status for Site A and Site B."
+  value = {
+    site_a = module.vpn_gateway_site_a.vpn_gateway_connection_statuses[local.vpn_connection_name_site_a]
+    site_b = module.vpn_gateway_site_b.vpn_gateway_connection_statuses[local.vpn_connection_name_site_b]
+  }
 }
+
+output "vpn_gateway_connection_ids" {
+  description = "Unique identifier of the VPN gateway connections for Site A and Site B."
+  value = {
+    site_a = module.vpn_gateway_site_a.vpn_gateway_connection_ids[local.vpn_connection_name_site_a]
+    site_b = module.vpn_gateway_site_b.vpn_gateway_connection_ids[local.vpn_connection_name_site_b]
+  }
+}
+
+##############################################################################
+# VPN Routes
+##############################################################################
+output "vpn_routes" {
+  description = "VPN routing information for site A and site B."
+  value = {
+    site_a = module.vpn_gateway_site_a.vpn_routes
+    site_b = module.vpn_gateway_site_b.vpn_routes
+  }
+}
+
+##############################################################################

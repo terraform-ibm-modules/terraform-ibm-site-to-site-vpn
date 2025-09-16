@@ -26,6 +26,7 @@ const resourceGroup = "geretain-test-resources"
 
 const vpcTovpcExampleDir = "examples/vpc-to-vpc"
 const singleSiteExampleDir = "examples/single-site"
+const multipleConnExampleDir = "examples/multiple-vpn-connections"
 
 // Define a struct with fields that match the structure of the YAML data
 const yamlLocation = "../common-dev-assets/common-go-assets/common-permanent-resources.yaml"
@@ -34,11 +35,15 @@ var permanentResources map[string]interface{}
 var sharedInfoSvc *cloudinfo.CloudInfoService
 
 var validRegions = []string{
-	"au-syd",
-	"us-south",
 	"us-east",
+	"ca-tor",
+	"ca-mon",
+	"br-sao",
 	"eu-de",
 	"eu-gb",
+	"eu-es",
+	"au-syd",
+	"jp-osa",
 	"jp-tok",
 }
 
@@ -75,7 +80,7 @@ func setupOptions(t *testing.T, prefix string, exampleDir string) *testhelper.Te
 }
 
 // Provision Remote VPN Gateway
-func setupRemoteVPNGateway(t *testing.T, region string, prefix string) *terraform.Options {
+func setupRemoteVPNGateway(t *testing.T, region string, prefix string, isSingleSite bool) *terraform.Options {
 	realTerraformDir := "./resources"
 	tempTerraformDir, _ := files.CopyTerraformFolderToTemp(realTerraformDir, fmt.Sprintf(prefix+"-%s", strings.ToLower(random.UniqueId())))
 
@@ -88,8 +93,9 @@ func setupRemoteVPNGateway(t *testing.T, region string, prefix string) *terrafor
 	existingTerraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: tempTerraformDir,
 		Vars: map[string]interface{}{
-			"prefix": prefix,
-			"region": region,
+			"prefix":                       prefix,
+			"region":                       region,
+			"create_multiple_vpn_gateways": isSingleSite,
 		},
 		Upgrade: true,
 	})
@@ -121,7 +127,7 @@ func TestRunSingleSiteExample(t *testing.T) {
 
 	var region = validRegions[rand.Intn(len(validRegions))]
 	prefixExistingRes := fmt.Sprintf("ex-%s", strings.ToLower(random.UniqueId()))
-	existingTerraformOptions := setupRemoteVPNGateway(t, region, prefixExistingRes)
+	existingTerraformOptions := setupRemoteVPNGateway(t, region, prefixExistingRes, false)
 
 	// Test Single Site using existing VPC and VPN Gateway details
 	options := setupOptions(t, "site1", singleSiteExampleDir)
