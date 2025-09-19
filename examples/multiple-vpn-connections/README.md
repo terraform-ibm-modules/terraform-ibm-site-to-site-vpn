@@ -1,4 +1,3 @@
-
 # Multiple Connections VPN Example
 
 This example demonstrates the recommended pattern for creating a single VPN site
