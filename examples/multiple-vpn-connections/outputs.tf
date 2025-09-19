@@ -16,7 +16,7 @@ output "subnet_id" {
 # Policies
 ##############################################################################
 
-output "ike_policies" {
+output "vpn_connection_policies" {
   description = "VPN Connection policies information"
   value       = module.vpn_gateway_with_multiple_connections.vpn_connection_policies
 }
