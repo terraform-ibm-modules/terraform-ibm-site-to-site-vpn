@@ -54,10 +54,34 @@ locals {
 locals {
 
   valid_ip_address = module.vpn_gateway_with_multiple_connections.vpn_gateway_public_ip == "0.0.0.0" ? module.vpn_gateway_with_multiple_connections.vpn_gateway_public_ip_2 : module.vpn_gateway_with_multiple_connections.vpn_gateway_public_ip
+
+  # IKE
+  ike_policy_config = {
+    name                     = "${var.prefix}-ike-policy"
+    authentication_algorithm = local.authentication_algo
+    encryption_algorithm     = local.encryption_algo
+    dh_group                 = 14
+  }
+
+  # IPSec
+  ipsec_policy_config = {
+    name                     = "${var.prefix}-ipsec-policy"
+    encryption_algorithm     = local.encryption_algo
+    authentication_algorithm = local.authentication_algo
+    pfs                      = "group_14"
+  }
+
+  # VPN Connections
   vpn_connection_1 = {
     name           = "${var.prefix}-vpn-conn-1"
     preshared_key  = var.preshared_key
     establish_mode = "peer_only"
+    # VPN Connection Policies
+    create_ike_policy   = true
+    create_ipsec_policy = true
+    ike_policy_config   = local.ike_policy_config
+    ipsec_policy_config = local.ipsec_policy_config
+
     peer_config = [
       {
         address = var.remote_gateway_ip
@@ -88,6 +112,13 @@ locals {
     name              = "${var.prefix}-vpn-conn-2"
     preshared_key     = var.preshared_key
     is_admin_state_up = true
+
+    # VPN Connection Policies
+    create_ike_policy   = true
+    create_ipsec_policy = true
+    ike_policy_config   = local.ike_policy_config
+    ipsec_policy_config = local.ipsec_policy_config
+
     peer_config = [
       {
         address = var.remote_gateway_ip_2
@@ -123,20 +154,6 @@ module "vpn_gateway_with_multiple_connections" {
   vpn_gateway_name      = local.vpn_gw_name
   vpn_gateway_subnet_id = local.subnet_id
   vpn_gateway_mode      = "policy" # Policy Based VPN
-
-  # Policies
-
-  create_vpn_policies = true
-  # IKE
-  ike_policy_name              = "${var.prefix}-ike-policy"
-  ike_authentication_algorithm = local.authentication_algo
-  ike_encryption_algorithm     = local.encryption_algo
-  ike_dh_group                 = 14
-  # IPSec
-  ipsec_policy_name              = "${var.prefix}-ipsec-policy"
-  ipsec_encryption_algorithm     = local.encryption_algo
-  ipsec_authentication_algorithm = local.authentication_algo
-  ipsec_pfs                      = "group_14"
 
   # VPN Connections
 
