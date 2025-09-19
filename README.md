@@ -18,8 +18,8 @@ This module automates the provisioning of a site-to-site VPN. For more informati
 * [Examples](./examples)
     * [Adding Connection to Existing VPN Gateway](./examples/vpc-to-vpc/existing-gateway-connection)
     * [VPC to VPC Example](./examples/vpc-to-vpc)
-    * [](./examples/multiple-vpn-connections)
-    * [](./examples/single-site)
+    * [Multiple VPN Connections Example](./examples/multiple-vpn-connections)
+    * [Single Site Example](./examples/single-site)
 * [Contributing](#contributing)
 <!-- END OVERVIEW HOOK -->
 
@@ -65,6 +65,11 @@ For more information refer [here](https://cloud.ibm.com/docs/vpc?topic=vpc-using
 * Configurable authentication and encryption algorithms.
 * Perfect Forward Secrecy (PFS) support.
 * Use custom policy if default does not meet peer requirements.
+
+> **Note:**
+> - When using existing policy IDs (both IKE and IPSec), ensure that the policy resides in the **same region as the VPN Gateway**.
+> - Within a given region, policy names must be **unique**. Two policies with the same name cannot coexist in the same region.
+
 
 ### VPN Connections
 
@@ -135,7 +140,19 @@ terraform {
 }
 
 locals {
-    region = "us-south"
+  region = "us-south"
+  ike_policy_config = {
+    name                     = "xxx-ike-policy" # Name of the IKE Policy
+    authentication_algorithm = "sha256" # Choose the relevant authentication algorithm
+    encryption_algorithm     = "aes256" # Choose the relevant encryption algorithm
+    dh_group                 = 14 # Provide valid Diffie-Hellman group.
+  }
+  ipsec_policy_config = {
+    name                     = "xxx-ipsec-policy" # Name of the IPSec Policy
+    encryption_algorithm     = "aes256" # Choose the relevant encryption algorithm
+    authentication_algorithm = "sha256" # Choose the relevant authentication algorithm
+    pfs                      = "group_14" # Perfect Forward Secrecy (PFS) protocol value
+  }
 }
 
 provider "ibm" {
@@ -154,15 +171,10 @@ module "site_to_site_vpn" {
   vpn_gateway_mode               = "route" # Can be route or policy
 
   # Policies
-  create_vpn_policies            = true
-  ike_policy_name                = "xxx-ike-policy" # Name of the IKE Policy
-  ike_authentication_algorithm   = "sha256" # Choose the relevant authentication algorithm
-  ike_encryption_algorithm       = "aes256" # Choose the relevant encryption algorithm
-  ike_dh_group                   = 14 # Provide valid Diffie-Hellman group.
-  ipsec_policy_name              = "xxx-ipsec-policy" # Name of the IPSec Policy
-  ipsec_authentication_algorithm = "sha256" # Choose the relevant authentication algorithm
-  ipsec_encryption_algorithm     = "aes256" # Choose the relevant encryption algorithm
-  ipsec_pfs                      = "group_14" # Perfect Forward Secrecy (PFS) protocol value
+  create_ike_policy   = true
+  create_ipsec_policy = true
+  ike_policy_config   = local.ike_policy_config
+  ipsec_policy_config = local.ipsec_policy_config
 
   # VPN Connections
   vpn_connections = [
