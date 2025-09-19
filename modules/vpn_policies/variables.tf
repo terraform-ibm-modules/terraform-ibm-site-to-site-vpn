@@ -18,10 +18,10 @@ variable "vpn_connections" {
     create_ike_policy = optional(bool, false)
 
     ike_policy_config = optional(object({
-      name                     = optional(string)
-      authentication_algorithm = optional(string)
-      encryption_algorithm     = optional(string)
-      dh_group                 = optional(number)
+      name                     = string
+      authentication_algorithm = string
+      encryption_algorithm     = string
+      dh_group                 = number
       version                  = optional(number, 2)
       key_lifetime             = optional(number, 28800)
     }), null)
@@ -30,10 +30,10 @@ variable "vpn_connections" {
     create_ipsec_policy = optional(bool, false)
 
     ipsec_policy_config = optional(object({
-      name                     = optional(string)
-      encryption_algorithm     = optional(string)
-      authentication_algorithm = optional(string)
-      pfs                      = optional(string)
+      name                     = string
+      encryption_algorithm     = string
+      authentication_algorithm = string
+      pfs                      = string
       key_lifetime             = optional(number, 3600)
     }), null)
 

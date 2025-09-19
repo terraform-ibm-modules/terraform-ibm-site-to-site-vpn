@@ -266,26 +266,31 @@ variable "vpn_connections" {
   validation {
     condition = alltrue([
       for conn in var.vpn_connections :
-      !conn.create_ike_policy || (
-        conn.ike_policy_config.name != null &&
-        conn.ike_policy_config.authentication_algorithm != null &&
-        conn.ike_policy_config.encryption_algorithm != null &&
-        conn.ike_policy_config.dh_group != null
+      (!conn.create_ike_policy && conn.ike_policy_config == null) || (
+        conn.create_ike_policy &&
+        can(conn.ike_policy_config.name) &&
+        can(conn.ike_policy_config.authentication_algorithm) &&
+        can(conn.ike_policy_config.encryption_algorithm) &&
+        can(conn.ike_policy_config.dh_group)
       )
     ])
-    error_message = "When create_ike_policy is true, all IKE policy configuration variables must be provided: ike_policy_name, ike_authentication_algorithm, ike_encryption_algorithm, ike_dh_group."
+    error_message = "When create_ike_policy is true, all IKE policy configuration variables must be provided: ike_policy_name, ike_authentication_algorithm, ike_encryption_algorithm, ike_dh_group. If create_ike_policy = false, ike_policy_config must be null."
   }
 
   validation {
     condition = alltrue([
       for conn in var.vpn_connections :
-      !conn.create_ipsec_policy || (
-        conn.ipsec_policy_config.name != null &&
-        conn.ipsec_policy_config.encryption_algorithm != null &&
-      conn.ipsec_policy_config.authentication_algorithm != null) &&
-      conn.ipsec_policy_config.pfs != null
+      (
+        !conn.create_ipsec_policy && conn.ipsec_policy_config == null
+        ) || (
+        conn.create_ipsec_policy &&
+        can(conn.ipsec_policy_config.name) &&
+        can(conn.ipsec_policy_config.encryption_algorithm) &&
+        can(conn.ipsec_policy_config.authentication_algorithm) &&
+        can(conn.ipsec_policy_config.pfs)
+      )
     ])
-    error_message = "When create_ipsec_policy is true, all IPSec policy configuration variables must be provided: ipsec_policy_name, ipsec_encryption_algorithm, ipsec_authentication_algorithm, ipsec_pfs."
+    error_message = "When create_ipsec_policy is true, all IPSec policy configuration variables must be provided: ipsec_policy_name, ipsec_encryption_algorithm, ipsec_authentication_algorithm, ipsec_pfs. If create_ipsec_policy = false, ipsec_policy_config must be null"
   }
 }
 
