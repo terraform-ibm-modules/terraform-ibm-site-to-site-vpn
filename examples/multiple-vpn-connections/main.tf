@@ -49,27 +49,41 @@ locals {
   authentication_algo = "sha256"
   encryption_algo     = "aes256"
   vpn_gw_name         = "${var.prefix}-vpn-gateway"
-}
 
-locals {
-
-  valid_ip_address = module.vpn_gateway_with_multiple_connections.vpn_gateway_public_ip == "0.0.0.0" ? module.vpn_gateway_with_multiple_connections.vpn_gateway_public_ip_2 : module.vpn_gateway_with_multiple_connections.vpn_gateway_public_ip
-
-  # IKE
-  ike_policy_config = {
-    name                     = "${var.prefix}-ike-policy"
+  # IKE Policies
+  ike_policy_config_conn_1 = {
+    name                     = "${var.prefix}-ike-policy-1"
     authentication_algorithm = local.authentication_algo
     encryption_algorithm     = local.encryption_algo
     dh_group                 = 14
   }
 
-  # IPSec
-  ipsec_policy_config = {
-    name                     = "${var.prefix}-ipsec-policy"
+  ike_policy_config_conn_2 = {
+    name                     = "${var.prefix}-ike-policy-2"
+    authentication_algorithm = local.authentication_algo
+    encryption_algorithm     = local.encryption_algo
+    dh_group                 = 14
+  }
+
+  # IPSec Policies
+  ipsec_policy_config_conn_1 = {
+    name                     = "${var.prefix}-ipsec-policy-1"
     encryption_algorithm     = local.encryption_algo
     authentication_algorithm = local.authentication_algo
     pfs                      = "group_14"
   }
+
+  ipsec_policy_config_conn_2 = {
+    name                     = "${var.prefix}-ipsec-policy-2"
+    encryption_algorithm     = local.encryption_algo
+    authentication_algorithm = local.authentication_algo
+    pfs                      = "group_14"
+  }
+}
+
+locals {
+
+  valid_ip_address = module.vpn_gateway_with_multiple_connections.vpn_gateway_public_ip == "0.0.0.0" ? module.vpn_gateway_with_multiple_connections.vpn_gateway_public_ip_2 : module.vpn_gateway_with_multiple_connections.vpn_gateway_public_ip
 
   # VPN Connections
   vpn_connection_1 = {
@@ -79,8 +93,8 @@ locals {
     # VPN Connection Policies
     create_ike_policy   = true
     create_ipsec_policy = true
-    ike_policy_config   = local.ike_policy_config
-    ipsec_policy_config = local.ipsec_policy_config
+    ike_policy_config   = local.ike_policy_config_conn_1
+    ipsec_policy_config = local.ipsec_policy_config_conn_1
 
     peer_config = [
       {
@@ -116,8 +130,8 @@ locals {
     # VPN Connection Policies
     create_ike_policy   = true
     create_ipsec_policy = true
-    ike_policy_config   = local.ike_policy_config
-    ipsec_policy_config = local.ipsec_policy_config
+    ike_policy_config   = local.ike_policy_config_conn_2
+    ipsec_policy_config = local.ipsec_policy_config_conn_2
 
     peer_config = [
       {

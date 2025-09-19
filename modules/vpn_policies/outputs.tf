@@ -9,7 +9,7 @@ output "ike_policy_ids" {
 
 output "ike_vpn_connections" {
   description = "List of VPN connections that are using the IKE policy created."
-  value       = { for conn in var.vpn_connections : conn.name => ibm_is_ike_policy.ike[conn.name].vpn_connections }
+  value       = try({ for conn in var.vpn_connections : conn.name => ibm_is_ike_policy.ike[conn.name].vpn_connections }, null)
 }
 
 output "ike_negotiation_mode" {
@@ -27,7 +27,7 @@ output "ipsec_policy_ids" {
 
 output "ipsec_vpn_connections" {
   description = "List of VPN connections that are using the IPSec policy created."
-  value       = { for conn in var.vpn_connections : conn.name => ibm_is_ipsec_policy.ipsec[conn.name].vpn_connections }
+  value       = try({ for conn in var.vpn_connections : conn.name => ibm_is_ipsec_policy.ipsec[conn.name].vpn_connections }, null)
 }
 
 output "ipsec_encapsulation_mode" {
