@@ -6,18 +6,16 @@ variable "resource_group" {
 }
 
 ##############################################################################
-# VPN Connections - Policy Configuratrion
+# VPN Connections - Policy Configuration
 ##############################################################################
 
 variable "vpn_connections" {
   description = "List of VPN Connections with IKE and IPSec configuration. Each connection can either create a new IKE/IPSec policy or reuse an existing policy Id."
   type = list(object({
-    name = string
+    name = string # VPN Connection Name
 
     # IKE Policy
-    create_ike_policy      = optional(bool, false)
-    # existing_ike_policy_id = optional(string, null)
-
+    create_ike_policy            = optional(bool, false)
     ike_policy_name              = optional(string)
     ike_authentication_algorithm = optional(string)
     ike_encryption_algorithm     = optional(string)
@@ -26,9 +24,7 @@ variable "vpn_connections" {
     ike_key_lifetime             = optional(number, 28800)
 
     # IPSec Policy
-    create_ipsec_policy      = optional(bool, false)
-    # existing_ipsec_policy_id = optional(string, null)
-
+    create_ipsec_policy            = optional(bool, false)
     ipsec_policy_name              = optional(string)
     ipsec_encryption_algorithm     = optional(string)
     ipsec_authentication_algorithm = optional(string)

@@ -4,7 +4,7 @@ This submodule is responsible to create and customize the **custom IKE and IPSec
 
 ## Features
 
-- Flexibility to create only IKE or IPSec policy for mulitiple connections.
+- Flexibility to create only IKE or IPSec policy for multiple connections.
 - Define IKE (IKEv1 or IKEv2) parameters: version, encryption, authentication, DH group, key lifetime.
 - Define IPsec parameters: encryption (including GCM), authentication or disabled for GCM, optional PFS group and key lifetime.
 

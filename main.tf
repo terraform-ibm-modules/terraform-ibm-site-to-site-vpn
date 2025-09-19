@@ -3,20 +3,32 @@
 ##############################################################################
 
 module "vpn_policies" {
-  count                          = var.create_vpn_policies ? 1 : 0
-  source                         = "./modules/vpn_policies"
-  resource_group                 = var.resource_group_id
-  ike_policy_name                = var.ike_policy_name
-  ike_authentication_algorithm   = var.ike_authentication_algorithm
-  ike_encryption_algorithm       = var.ike_encryption_algorithm
-  ike_dh_group                   = var.ike_dh_group
-  ike_version                    = var.ike_version
-  ike_key_lifetime               = var.ike_key_lifetime
-  ipsec_policy_name              = var.ipsec_policy_name
-  ipsec_encryption_algorithm     = var.ipsec_encryption_algorithm
-  ipsec_authentication_algorithm = var.ipsec_authentication_algorithm
-  ipsec_pfs                      = var.ipsec_pfs
-  ipsec_key_lifetime             = var.ipsec_key_lifetime
+
+  count          = length([for conn in var.vpn_connections : conn if conn.create_ike_policy || conn.create_ipsec_policy]) > 0 ? 1 : 0
+  source         = "./modules/vpn_policies"
+  resource_group = var.resource_group_id
+  vpn_connections = [
+    for conn in var.vpn_connections : {
+      name = conn.name
+
+      # IKE Policy
+      create_ike_policy            = conn.create_ike_policy
+      ike_policy_name              = conn.ike_policy_config.name
+      ike_authentication_algorithm = conn.ike_policy_config.authentication_algorithm
+      ike_encryption_algorithm     = conn.ike_policy_config.encryption_algorithm
+      ike_dh_group                 = conn.ike_policy_config.dh_group
+      ike_version                  = conn.ike_policy_config.ike_version
+      ike_key_lifetime             = conn.ike_policy_config.key_lifetime
+
+      # IPSec Policy
+      create_ipsec_policy            = conn.create_ipsec_policy
+      ipsec_policy_name              = conn.ipsec_policy_config.name
+      ipsec_encryption_algorithm     = conn.ipsec_policy_config.encryption_algorithm
+      ipsec_authentication_algorithm = conn.ipsec_policy_config.authentication_algorithm
+      ipsec_pfs                      = conn.ipsec_policy_config.pfs
+      ipsec_key_lifetime             = conn.ipsec_policy_config.key_lifetime
+    }
+  ]
 }
 
 ##############################################################################
@@ -53,23 +65,20 @@ locals {
     var.existing_vpn_gateway_id != null ? var.existing_vpn_gateway_id : null
   )
 
-  ike_policy_id = (
-    var.create_vpn_policies ? module.vpn_policies[0].ike_policy_id :
-    var.existing_ike_policy_id != null ? var.existing_ike_policy_id : null
-  )
-
-  ipsec_policy_id = (
-    var.create_vpn_policies ? module.vpn_policies[0].ipsec_policy_id :
-    var.existing_ipsec_policy_id != null ? var.existing_ipsec_policy_id : null
-  )
+  connection_policies = {
+    for conn in var.vpn_connections : conn.name => {
+      ike_policy_id   = conn.create_ike_policy ? module.vpn_policies[0].connection_policy_ids[conn.name].ike_policy_id : conn.existing_ike_policy_id
+      ipsec_policy_id = conn.create_ipsec_policy ? module.vpn_policies[0].connection_policy_ids[conn.name].ipsec_policy_id : conn.existing_ipsec_policy_id
+    }
+  }
 }
 
 resource "ibm_is_vpn_gateway_connection" "vpn_site_to_site_connection" {
   depends_on         = [module.vpn_policies, time_sleep.wait_for_gateway_creation]
   for_each           = { for conn in var.vpn_connections : conn.name => conn }
   vpn_gateway        = local.vpn_gateway_id
-  ike_policy         = local.ike_policy_id
-  ipsec_policy       = local.ipsec_policy_id
+  ike_policy         = local.connection_policies[each.key].ike_policy_id
+  ipsec_policy       = local.connection_policies[each.key].ipsec_policy_id
   name               = each.key
   admin_state_up     = each.value.is_admin_state_up
   preshared_key      = sensitive(each.value.preshared_key)
