@@ -266,7 +266,7 @@ variable "vpn_connections" {
   validation {
     condition = alltrue([
       for conn in var.vpn_connections :
-      (!conn.create_ike_policy && conn.ike_policy_config == null) || (
+      (!conn.create_ike_policy && conn.ike_policy_config == null && conn.existing_ike_policy_id != null) || (
         conn.create_ike_policy &&
         can(conn.ike_policy_config.name) &&
         can(conn.ike_policy_config.authentication_algorithm) &&
@@ -281,8 +281,7 @@ variable "vpn_connections" {
     condition = alltrue([
       for conn in var.vpn_connections :
       (
-        !conn.create_ipsec_policy && conn.ipsec_policy_config == null
-        ) || (
+        !conn.create_ipsec_policy && conn.ipsec_policy_config == null && conn.existing_ipsec_policy_id != null) || (
         conn.create_ipsec_policy &&
         can(conn.ipsec_policy_config.name) &&
         can(conn.ipsec_policy_config.encryption_algorithm) &&

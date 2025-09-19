@@ -13,24 +13,24 @@ module "vpn_policies" {
 
       # IKE Policy
       create_ike_policy = conn.create_ike_policy
-      ike_policy_config = {
+      ike_policy_config = conn.create_ike_policy ? {
         name                     = conn.ike_policy_config.name
         authentication_algorithm = conn.ike_policy_config.authentication_algorithm
         encryption_algorithm     = conn.ike_policy_config.encryption_algorithm
         dh_group                 = conn.ike_policy_config.dh_group
         version                  = conn.ike_policy_config.ike_version
         key_lifetime             = conn.ike_policy_config.key_lifetime
-      }
+      } : null
 
       # IPSec Policy
       create_ipsec_policy = conn.create_ipsec_policy
-      ipsec_policy_config = {
+      ipsec_policy_config = conn.create_ipsec_policy ? {
         name                     = conn.ipsec_policy_config.name
         encryption_algorithm     = conn.ipsec_policy_config.encryption_algorithm
         authentication_algorithm = conn.ipsec_policy_config.authentication_algorithm
         pfs                      = conn.ipsec_policy_config.pfs
         key_lifetime             = conn.ipsec_policy_config.key_lifetime
-      }
+      } : null
     }
   ]
 }
