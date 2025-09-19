@@ -12,21 +12,25 @@ module "vpn_policies" {
       name = conn.name
 
       # IKE Policy
-      create_ike_policy            = conn.create_ike_policy
-      ike_policy_name              = conn.ike_policy_config.name
-      ike_authentication_algorithm = conn.ike_policy_config.authentication_algorithm
-      ike_encryption_algorithm     = conn.ike_policy_config.encryption_algorithm
-      ike_dh_group                 = conn.ike_policy_config.dh_group
-      ike_version                  = conn.ike_policy_config.ike_version
-      ike_key_lifetime             = conn.ike_policy_config.key_lifetime
+      create_ike_policy = conn.create_ike_policy
+      ike_policy_config = {
+        name                     = conn.ike_policy_config.name
+        authentication_algorithm = conn.ike_policy_config.authentication_algorithm
+        encryption_algorithm     = conn.ike_policy_config.encryption_algorithm
+        dh_group                 = conn.ike_policy_config.dh_group
+        version                  = conn.ike_policy_config.ike_version
+        key_lifetime             = conn.ike_policy_config.key_lifetime
+      }
 
       # IPSec Policy
-      create_ipsec_policy            = conn.create_ipsec_policy
-      ipsec_policy_name              = conn.ipsec_policy_config.name
-      ipsec_encryption_algorithm     = conn.ipsec_policy_config.encryption_algorithm
-      ipsec_authentication_algorithm = conn.ipsec_policy_config.authentication_algorithm
-      ipsec_pfs                      = conn.ipsec_policy_config.pfs
-      ipsec_key_lifetime             = conn.ipsec_policy_config.key_lifetime
+      create_ipsec_policy = conn.create_ipsec_policy
+      ipsec_policy_config = {
+        name                     = conn.ipsec_policy_config.name
+        encryption_algorithm     = conn.ipsec_policy_config.encryption_algorithm
+        authentication_algorithm = conn.ipsec_policy_config.authentication_algorithm
+        pfs                      = conn.ipsec_policy_config.pfs
+        key_lifetime             = conn.ipsec_policy_config.key_lifetime
+      }
     }
   ]
 }
@@ -67,8 +71,8 @@ locals {
 
   connection_policies = {
     for conn in var.vpn_connections : conn.name => {
-      ike_policy_id   = conn.create_ike_policy ? module.vpn_policies[0].connection_policy_ids[conn.name].ike_policy_id : conn.existing_ike_policy_id
-      ipsec_policy_id = conn.create_ipsec_policy ? module.vpn_policies[0].connection_policy_ids[conn.name].ipsec_policy_id : conn.existing_ipsec_policy_id
+      ike_policy_id   = conn.create_ike_policy ? module.vpn_policies[0].ike_policy_ids[conn.name] : conn.existing_ike_policy_id
+      ipsec_policy_id = conn.create_ipsec_policy ? module.vpn_policies[0].ipsec_policy_ids[conn.name] : conn.existing_ipsec_policy_id
     }
   }
 }

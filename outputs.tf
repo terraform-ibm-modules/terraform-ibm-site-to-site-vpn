@@ -5,23 +5,20 @@
 output "vpn_connection_policies" {
   description = "IKE and IPSec policy details."
   value = {
-    for conn in var.vpn_connections : conn.name => { ike = conn.existing_ike_policy_id != null ? { id = conn.existing_ike_policy_id
-      } : {
-      id               = module.vpn_policies[0].ike_policy_ids[conn.name]
-      vpn_connections  = module.vpn_policies[0].ike_vpn_connections[conn.name]
-      negotiation_mode = module.vpn_policies[0].ike_negotiation_mode[conn.name]
+    for conn in var.vpn_connections : conn.name => {
+      ike_policy = {
+        id               = conn.existing_ike_policy_id != null ? conn.existing_ike_policy_id : module.vpn_policies[0].ike_policy_ids[conn.name]
+        vpn_connections  = try(module.vpn_policies[0].ike_vpn_connections[conn.name], null)
+        negotiation_mode = try(module.vpn_policies[0].ike_negotiation_mode[conn.name], null)
       }
-      ipsec = conn.existing_ipsec_policy_id != null ? { id = conn.existing_ipsec_policy_id
-        } : {
-        id                 = module.vpn_policies[0].ipsec_policy_ids[conn.name]
-        vpn_connections    = module.vpn_policies[0].ipsec_vpn_connections[conn.name]
-        encapsulation_mode = module.vpn_policies[0].ipsec_encapsulation_mode[conn.name]
-        transform_protocol = module.vpn_policies[0].ipsec_transform_protocol[conn.name]
-      }
-    }
+      ipsec_policy = {
+        id                 = conn.existing_ipsec_policy_id != null ? conn.existing_ipsec_policy_id : module.vpn_policies[0].ipsec_policy_ids[conn.name]
+        vpn_connections    = try(module.vpn_policies[0].ipsec_vpn_connections[conn.name], null)
+        encapsulation_mode = try(module.vpn_policies[0].ipsec_encapsulation_mode[conn.name], null)
+        transform_protocol = try(module.vpn_policies[0].ipsec_transform_protocol[conn.name], null)
+    } }
   }
 }
-
 
 ##############################################################################
 # VPN Gateway

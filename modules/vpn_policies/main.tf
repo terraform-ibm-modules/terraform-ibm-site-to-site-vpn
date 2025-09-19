@@ -27,7 +27,7 @@ resource "ibm_is_ike_policy" "ike" {
   authentication_algorithm = each.value.ike_policy_config.authentication_algorithm
   encryption_algorithm     = each.value.ike_policy_config.encryption_algorithm
   dh_group                 = each.value.ike_policy_config.dh_group
-  ike_version              = each.value.ike_policy_config.ike_version
+  ike_version              = each.value.ike_policy_config.version
   key_lifetime             = each.value.ike_policy_config.key_lifetime
 }
 
