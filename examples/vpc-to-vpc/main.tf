@@ -109,7 +109,7 @@ locals {
     name          = local.vpn_connection_name_site_b
     preshared_key = var.preshared_key
 
-    # Policies configuration (use already created policies for this connection)
+    # Policies configuration (creating new policies for this connection)
     create_ike_policy   = true
     create_ipsec_policy = true
     ike_policy_config   = local.ike_policy_config_site_b
