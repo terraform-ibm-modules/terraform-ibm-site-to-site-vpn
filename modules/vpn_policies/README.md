@@ -11,21 +11,44 @@ This submodule is responsible to create and customize the **custom IKE and IPSec
 ## Example Usage
 
 ```hcl
-module "policies" {
-  source                          = "../modules/vpn_policies"
-  resource_group                  = "rg123...." # Enter your resource group id
+module "vpn_policies" {
+  count          = length([for conn in var.vpn_connections : conn if conn.create_ike_policy || conn.create_ipsec_policy]) > 0 ? 1 : 0
+  source         = "../modules/vpn_policies"
+  resource_group = "rg123..." # Replace with your resource group ID
 
-  ike_policy_name                 = "eg-ike" # Name of your IKE Policy
-  ike_authentication_algorithm    = "sha256"
-  ike_encryption_algorithm.       = "aes256"
-  ike_dh_group                    = 14
-  ike_version                     = 2
-  ike_key_lifetime                = 1800
+  vpn_connections = [
+    {
+      name = "vpn-conn-1" # Name of first VPN Connection
 
-  ipsec_policy_name               = "eg-ipsec" # Name of your IPSec Policy
-  ipsec_authentication_algorithm  = "sha256"
-  ipsec_encryption_algorithm      = "aes128gcm16"
-  ipsec_pfs                       = "disabled"
-  ipsec_key_lifetime              = 300
+      # IKE Policy
+      create_ike_policy      = true
+      ike_policy_config = {
+        name                     = "ike-policy-1" # Name of IKE policy
+        authentication_algorithm = "sha256"
+        encryption_algorithm     = "aes256"
+        dh_group                 = 14
+        version                  = 2
+        key_lifetime             = 1800
+      }
+
+      # IPSec Policy
+      create_ipsec_policy      = true
+      ipsec_policy_config = {
+        name                     = "ipsec-policy-1" # Name of IPSec policy
+        encryption_algorithm     = "aes128gcm16"
+        authentication_algorithm = "sha256"
+        pfs                      = "disabled"
+        key_lifetime             = 300
+      }
+    },
+    {
+      name = "vpn-conn-2" # Name of second VPN Connection
+      # Reuse existing policies
+      existing_ike_policy_id = "existing-ike-id" # Existing IKE Policy id
+      existing_ipsec_policy_id = "existing-ipsec-id" # Existing IPSec Policy id
+    }
+  ]
 }
 ```
+
+> When `create_ike_policy = true`, `ike_policy_config` must be provided with all required fields. Otherwise, supply `existing_ike_policy_id`. Same applies for `IPSec`.
