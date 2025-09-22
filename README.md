@@ -17,9 +17,9 @@ This module automates the provisioning of a site-to-site VPN. For more informati
     * [vpn_routing](./modules/vpn_routing)
 * [Examples](./examples)
     * [Adding Connection to Existing VPN Gateway](./examples/vpc-to-vpc/existing-gateway-connection)
+    * [Multiple Connections VPN Example](./examples/multiple-vpn-connections)
+    * [Single Site VPN Example](./examples/single-site)
     * [VPC to VPC Example](./examples/vpc-to-vpc)
-    * [](./examples/multiple-vpn-connections)
-    * [](./examples/single-site)
 * [Contributing](#contributing)
 <!-- END OVERVIEW HOOK -->
 
@@ -65,6 +65,11 @@ For more information refer [here](https://cloud.ibm.com/docs/vpc?topic=vpc-using
 * Configurable authentication and encryption algorithms.
 * Perfect Forward Secrecy (PFS) support.
 * Use custom policy if default does not meet peer requirements.
+
+> **Note:**
+> - When using existing policy IDs (both IKE and IPSec), ensure that the policy resides in the **same region as the VPN Gateway**.
+> - Within a given region, policy names must be **unique**. Two policies with the same name cannot coexist in the same region.
+
 
 ### VPN Connections
 
@@ -135,7 +140,19 @@ terraform {
 }
 
 locals {
-    region = "us-south"
+  region = "us-south"
+  ike_policy_config = {
+    name                     = "xxx-ike-policy" # Name of the IKE Policy
+    authentication_algorithm = "sha256" # Choose the relevant authentication algorithm
+    encryption_algorithm     = "aes256" # Choose the relevant encryption algorithm
+    dh_group                 = 14 # Provide valid Diffie-Hellman group.
+  }
+  ipsec_policy_config = {
+    name                     = "xxx-ipsec-policy" # Name of the IPSec Policy
+    encryption_algorithm     = "aes256" # Choose the relevant encryption algorithm
+    authentication_algorithm = "sha256" # Choose the relevant authentication algorithm
+    pfs                      = "group_14" # Perfect Forward Secrecy (PFS) protocol value
+  }
 }
 
 provider "ibm" {
@@ -154,15 +171,10 @@ module "site_to_site_vpn" {
   vpn_gateway_mode               = "route" # Can be route or policy
 
   # Policies
-  create_vpn_policies            = true
-  ike_policy_name                = "xxx-ike-policy" # Name of the IKE Policy
-  ike_authentication_algorithm   = "sha256" # Choose the relevant authentication algorithm
-  ike_encryption_algorithm       = "aes256" # Choose the relevant encryption algorithm
-  ike_dh_group                   = 14 # Provide valid Diffie-Hellman group.
-  ipsec_policy_name              = "xxx-ipsec-policy" # Name of the IPSec Policy
-  ipsec_authentication_algorithm = "sha256" # Choose the relevant authentication algorithm
-  ipsec_encryption_algorithm     = "aes256" # Choose the relevant encryption algorithm
-  ipsec_pfs                      = "group_14" # Perfect Forward Secrecy (PFS) protocol value
+  create_ike_policy   = true
+  create_ipsec_policy = true
+  ike_policy_config   = local.ike_policy_config
+  ipsec_policy_config = local.ipsec_policy_config
 
   # VPN Connections
   vpn_connections = [
@@ -277,22 +289,8 @@ You need the following permissions to run this module.
 | <a name="input_create_route_table"></a> [create\_route\_table](#input\_create\_route\_table) | Whether to create a new route table. | `bool` | `false` | no |
 | <a name="input_create_routes"></a> [create\_routes](#input\_create\_routes) | Whether to create VPN routes. | `bool` | `false` | no |
 | <a name="input_create_vpn_gateway"></a> [create\_vpn\_gateway](#input\_create\_vpn\_gateway) | Whether to create a new VPN Gateway. Set to false to use an existing gateway. | `bool` | `true` | no |
-| <a name="input_create_vpn_policies"></a> [create\_vpn\_policies](#input\_create\_vpn\_policies) | Whether to create a new IKE and IPSec policy. | `bool` | `false` | no |
-| <a name="input_existing_ike_policy_id"></a> [existing\_ike\_policy\_id](#input\_existing\_ike\_policy\_id) | ID of existing IKE policy to use instead of creating new one. | `string` | `null` | no |
-| <a name="input_existing_ipsec_policy_id"></a> [existing\_ipsec\_policy\_id](#input\_existing\_ipsec\_policy\_id) | ID of existing IPSec policy to use instead of creating new one. | `string` | `null` | no |
 | <a name="input_existing_route_table_id"></a> [existing\_route\_table\_id](#input\_existing\_route\_table\_id) | ID of existing route table to use. | `string` | `null` | no |
 | <a name="input_existing_vpn_gateway_id"></a> [existing\_vpn\_gateway\_id](#input\_existing\_vpn\_gateway\_id) | ID of existing VPN Gateway to use. Required if create\_vpn\_gateway is false and vpn\_gateway\_name is not provided. | `string` | `null` | no |
-| <a name="input_ike_authentication_algorithm"></a> [ike\_authentication\_algorithm](#input\_ike\_authentication\_algorithm) | The authentication algorithm used in the IKE policy. Valid values: sha256, sha384, sha512. | `string` | `null` | no |
-| <a name="input_ike_dh_group"></a> [ike\_dh\_group](#input\_ike\_dh\_group) | The Diffie-Hellman group to use. Valid values: 14 to 24, or 31. | `number` | `null` | no |
-| <a name="input_ike_encryption_algorithm"></a> [ike\_encryption\_algorithm](#input\_ike\_encryption\_algorithm) | The encryption algorithm used in the IKE policy. Valid values: aes128, aes192, aes256. | `string` | `null` | no |
-| <a name="input_ike_key_lifetime"></a> [ike\_key\_lifetime](#input\_ike\_key\_lifetime) | The key lifetime in seconds. Must be between 1800 and 86400. | `number` | `28800` | no |
-| <a name="input_ike_policy_name"></a> [ike\_policy\_name](#input\_ike\_policy\_name) | Name of the IKE policy to create. Applicable when create\_vpn\_policies is true | `string` | `null` | no |
-| <a name="input_ike_version"></a> [ike\_version](#input\_ike\_version) | The IKE protocol version to use. Valid values: 1 or 2. | `number` | `2` | no |
-| <a name="input_ipsec_authentication_algorithm"></a> [ipsec\_authentication\_algorithm](#input\_ipsec\_authentication\_algorithm) | The authentication algorithm for the IPSec policy. Valid values: sha256, sha384, sha512, disabled. | `string` | `null` | no |
-| <a name="input_ipsec_encryption_algorithm"></a> [ipsec\_encryption\_algorithm](#input\_ipsec\_encryption\_algorithm) | The encryption algorithm for the IPSec policy. Valid values: aes128, aes192, aes256, aes128gcm16, aes192gcm16, aes256gcm16. | `string` | `null` | no |
-| <a name="input_ipsec_key_lifetime"></a> [ipsec\_key\_lifetime](#input\_ipsec\_key\_lifetime) | The key lifetime for the IPSec policy in seconds. Must be between 300 and 86400. | `number` | `3600` | no |
-| <a name="input_ipsec_pfs"></a> [ipsec\_pfs](#input\_ipsec\_pfs) | The Perfect Forward Secrecy (PFS) protocol for the IPSec policy. Valid values: disabled, group\_2, group\_5, group\_14. | `string` | `null` | no |
-| <a name="input_ipsec_policy_name"></a> [ipsec\_policy\_name](#input\_ipsec\_policy\_name) | Name of the IPSec policy to create. | `string` | `null` | no |
 | <a name="input_resource_group_id"></a> [resource\_group\_id](#input\_resource\_group\_id) | The ID of the resource group to use where you want to create the VPN gateway. | `string` | n/a | yes |
 | <a name="input_route_attach_subnet"></a> [route\_attach\_subnet](#input\_route\_attach\_subnet) | Whether to attach subnet to the VPN route table. | `bool` | `false` | no |
 | <a name="input_route_direct_link_ingress"></a> [route\_direct\_link\_ingress](#input\_route\_direct\_link\_ingress) | Allow routing from Direct Link. | `bool` | `false` | no |
@@ -304,7 +302,7 @@ You need the following permissions to run this module.
 | <a name="input_routing_table_name"></a> [routing\_table\_name](#input\_routing\_table\_name) | Name of the routing table to create. | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | List of Tags for the resource created | `list(string)` | `null` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | VPC ID where routes will be created. | `string` | `null` | no |
-| <a name="input_vpn_connections"></a> [vpn\_connections](#input\_vpn\_connections) | List of VPN connections to attach to the VPN gateway. | <pre>list(object({<br/>    name                      = string                            # Name of the VPN connection<br/>    preshared_key             = string                            # Required to specify the authentication key of the VPN gateway for the network outside your VPC. [Learn More](https://cloud.ibm.com/docs/vpc?topic=vpc-vpn-create-gateway&interface=ui#planning-considerations-vpn)<br/>    is_admin_state_up         = optional(bool, false)             # Flag to control the administrative state of the VPN gateway connection. If set to false (default), the connection is shut down. Set to true to enable the connection.<br/>    establish_mode            = optional(string, "bidirectional") # Determines IKE negotiation behavior for the VPN gateway connection. Use 'bidirectional' to allow both sides to initiate IKE negotiations and rekeying. Use 'peer_only' to restrict initiation and rekeying to the peer side.<br/>    enable_distribute_traffic = optional(bool, false)             # Flag for route-based VPN gateway connections to control traffic distribution across active tunnels. When true, traffic is load-balanced otherwise, it flows through the tunnel with the lower public IP.<br/>    dpd_action                = optional(string, "restart")       # Action to perform when the peer is unresponsive. Possible values are - 'restart', 'clear', 'hold', or 'none'.<br/>    dpd_check_interval        = optional(number, 2)               # Interval in seconds between dead peer detection checks for peer responsiveness.<br/>    dpd_max_timeout           = optional(number, 10)              # Time in seconds to wait before considering the peer unreachable.<br/><br/>    peer_config = optional(list(object({<br/>      address = optional(string)<br/>      fqdn    = optional(string)<br/>      cidrs   = optional(list(string), [])<br/>      ike_identity = list(object({<br/>        type  = string<br/>        value = optional(string)<br/>      }))<br/>    })), [])<br/><br/>    local_config = optional(list(object({<br/>      cidrs = optional(list(string), [])<br/>      ike_identities = list(object({<br/>        type  = string<br/>        value = optional(string)<br/>      }))<br/>    })), [])<br/>  }))</pre> | `[]` | no |
+| <a name="input_vpn_connections"></a> [vpn\_connections](#input\_vpn\_connections) | List of VPN connections to attach to the VPN gateway. | <pre>list(object({<br/>    name                      = string                            # Name of the VPN connection<br/>    preshared_key             = string                            # Required to specify the authentication key of the VPN gateway for the network outside your VPC. [Learn More](https://cloud.ibm.com/docs/vpc?topic=vpc-vpn-create-gateway&interface=ui#planning-considerations-vpn)<br/>    is_admin_state_up         = optional(bool, false)             # Flag to control the administrative state of the VPN gateway connection. If set to false (default), the connection is shut down. Set to true to enable the connection.<br/>    establish_mode            = optional(string, "bidirectional") # Determines IKE negotiation behavior for the VPN gateway connection. Use 'bidirectional' to allow both sides to initiate IKE negotiations and rekeying. Use 'peer_only' to restrict initiation and rekeying to the peer side.<br/>    enable_distribute_traffic = optional(bool, false)             # Flag for route-based VPN gateway connections to control traffic distribution across active tunnels. When true, traffic is load-balanced otherwise, it flows through the tunnel with the lower public IP.<br/>    dpd_action                = optional(string, "restart")       # Action to perform when the peer is unresponsive. Possible values are - 'restart', 'clear', 'hold', or 'none'.<br/>    dpd_check_interval        = optional(number, 2)               # Interval in seconds between dead peer detection checks for peer responsiveness.<br/>    dpd_max_timeout           = optional(number, 10)              # Time in seconds to wait before considering the peer unreachable.<br/><br/>    # Policy configuration per connection<br/><br/>    # IKE Policy<br/>    create_ike_policy      = optional(bool, false)  # Flag to create new IKE policy.<br/>    existing_ike_policy_id = optional(string, null) # ID of existing IKE policy to use (mutually exclusive with create_ike_policy)<br/><br/>    ike_policy_config = optional(object({<br/>      name                     = string<br/>      authentication_algorithm = string # sha256, sha384, sha512<br/>      encryption_algorithm     = string # aes128, aes192, aes256<br/>      dh_group                 = number # 14-24, 31<br/>      ike_version              = optional(number, 2)<br/>      key_lifetime             = optional(number, 28800)<br/>    }), null) # Provide config only if create_ike_policy is true<br/><br/>    # IPSec policy<br/>    create_ipsec_policy      = optional(bool, false)  # Flag to create new IPSec policy<br/>    existing_ipsec_policy_id = optional(string, null) # ID of existing IPSec policy to use (mutually exclusive with create_ipsec_policy)<br/><br/>    ipsec_policy_config = optional(object({<br/>      name                     = string<br/>      encryption_algorithm     = string # aes128, aes192, aes256, aes128gcm16, aes192gcm16, aes256gcm16<br/>      authentication_algorithm = string # sha256, sha384, sha512, disabled<br/>      pfs                      = string # disabled, group_2, group_5, group_14<br/>      key_lifetime             = optional(number, 3600)<br/>    }), null) # Provide config only if create_ipsec_policy is true<br/><br/>    # Peer and Local Configuration<br/>    peer_config = optional(list(object({<br/>      address = optional(string)<br/>      fqdn    = optional(string)<br/>      cidrs   = optional(list(string), [])<br/>      ike_identity = list(object({<br/>        type  = string<br/>        value = optional(string)<br/>      }))<br/>    })), [])<br/><br/>    local_config = optional(list(object({<br/>      cidrs = optional(list(string), [])<br/>      ike_identities = list(object({<br/>        type  = string<br/>        value = optional(string)<br/>      }))<br/>    })), [])<br/>  }))</pre> | `[]` | no |
 | <a name="input_vpn_gateway_mode"></a> [vpn\_gateway\_mode](#input\_vpn\_gateway\_mode) | Specifies the VPN configuration mode for IBM Cloud VPN for VPC. Use 'route' for a static, route-based IPsec tunnel or 'policy' for a policy-based tunnel to connect your VPC to another private network. | `string` | `"route"` | no |
 | <a name="input_vpn_gateway_name"></a> [vpn\_gateway\_name](#input\_vpn\_gateway\_name) | Name of the VPN gateway. Only required if creating a new VPN Gateway. | `string` | `null` | no |
 | <a name="input_vpn_gateway_subnet_id"></a> [vpn\_gateway\_subnet\_id](#input\_vpn\_gateway\_subnet\_id) | The ID of the subnet where the VPN gateway will reside in. | `string` | `null` | no |
@@ -313,8 +311,7 @@ You need the following permissions to run this module.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_ike_policy"></a> [ike\_policy](#output\_ike\_policy) | Map of newly created IKE policy. |
-| <a name="output_ipsec_policy"></a> [ipsec\_policy](#output\_ipsec\_policy) | Map of newly created IPSec policy. |
+| <a name="output_vpn_connection_policies"></a> [vpn\_connection\_policies](#output\_vpn\_connection\_policies) | IKE and IPSec policy details. |
 | <a name="output_vpn_gateway_connection_ids"></a> [vpn\_gateway\_connection\_ids](#output\_vpn\_gateway\_connection\_ids) | Map of VPN gateway connection IDs, keyed by connection name. |
 | <a name="output_vpn_gateway_connection_modes"></a> [vpn\_gateway\_connection\_modes](#output\_vpn\_gateway\_connection\_modes) | Map of VPN gateway connection modes: either 'policy' or 'route'. |
 | <a name="output_vpn_gateway_connection_statuses"></a> [vpn\_gateway\_connection\_statuses](#output\_vpn\_gateway\_connection\_statuses) | Map of current statuses for each VPN gateway connection, either 'up' or 'down'. |

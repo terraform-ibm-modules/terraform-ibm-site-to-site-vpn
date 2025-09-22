@@ -2,25 +2,22 @@
 # VPN Policies - IKE and IPSec
 ########################################################################################################################
 
-output "ike_policy" {
-  description = "Map of newly created IKE policy."
-  value = var.create_vpn_policies ? {
-    ike_policy_name  = var.ike_policy_name
-    id               = module.vpn_policies[0].ike_policy_id
-    vpn_connections  = module.vpn_policies[0].ike_vpn_connections
-    negotiation_mode = module.vpn_policies[0].ike_negotiation_mode
-  } : null
-}
-
-output "ipsec_policy" {
-  description = "Map of newly created IPSec policy."
-  value = var.create_vpn_policies ? {
-    ipsec_policy_name  = var.ipsec_policy_name
-    id                 = module.vpn_policies[0].ipsec_policy_id
-    vpn_connections    = module.vpn_policies[0].ipsec_vpn_connections
-    encapsulation_mode = module.vpn_policies[0].ipsec_encapsulation_mode
-    transform_protocol = module.vpn_policies[0].ipsec_transform_protocol
-  } : null
+output "vpn_connection_policies" {
+  description = "IKE and IPSec policy details."
+  value = {
+    for conn in var.vpn_connections : conn.name => {
+      ike_policy = {
+        id               = conn.existing_ike_policy_id != null ? conn.existing_ike_policy_id : try(module.vpn_policies[0].ike_policy_ids[conn.name], null)
+        vpn_connections  = try(module.vpn_policies[0].ike_vpn_connections[conn.name], null)
+        negotiation_mode = try(module.vpn_policies[0].ike_negotiation_mode[conn.name], null)
+      }
+      ipsec_policy = {
+        id                 = conn.existing_ipsec_policy_id != null ? conn.existing_ipsec_policy_id : try(module.vpn_policies[0].ipsec_policy_ids[conn.name], null)
+        vpn_connections    = try(module.vpn_policies[0].ipsec_vpn_connections[conn.name], null)
+        encapsulation_mode = try(module.vpn_policies[0].ipsec_encapsulation_mode[conn.name], null)
+        transform_protocol = try(module.vpn_policies[0].ipsec_transform_protocol[conn.name], null)
+    } }
+  }
 }
 
 ##############################################################################
@@ -78,13 +75,6 @@ output "vpn_gateway_connection_ids" {
   value       = { for k, v in ibm_is_vpn_gateway_connection.vpn_site_to_site_connection : k => v.gateway_connection }
 }
 
-# CRNs of all VPN Connections
-# This is part of attribute reference but giving errors now.
-# output "vpn_gateway_connection_crns" {
-#   description = "Map of VPN gateway connection CRNs, keyed by connection name."
-#   value       = { for k, v in ibm_is_vpn_gateway_connection.vpn_site_to_site_connection : k => v.crn }
-# }
-
 output "vpn_gateway_connection_statuses" {
   description = "Map of current statuses for each VPN gateway connection, either 'up' or 'down'."
   value       = { for k, v in ibm_is_vpn_gateway_connection.vpn_site_to_site_connection : k => v.status }
@@ -108,20 +98,6 @@ output "vpn_status_reasons" {
     ] : null
   }
 }
-
-# # Tunnels for route-based connections
-# output "vpn_tunnels" {
-#   description = "Map of VPN tunnel configurations (only for route mode connections)."
-#   value = {
-#     for k, v in ibm_is_vpn_gateway_connection.vpn_site_to_site_connection :
-#     k => v.mode == "route" ? [
-#       for tunnel in try(v.tunnels, []) : {
-#         address       = tunnel.address
-#         resource_type = tunnel.resource_type
-#       }
-#     ] : null
-#   }
-# }
 
 ##############################################################################
 # Routes

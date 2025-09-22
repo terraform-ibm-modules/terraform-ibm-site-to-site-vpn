@@ -14,8 +14,10 @@ module "resource_group" {
 locals {
   connection_name = "${var.prefix}-test-connection"
   vpn_conn = {
-    name          = local.connection_name
-    preshared_key = var.preshared_key
+    name                     = local.connection_name
+    preshared_key            = var.preshared_key
+    existing_ike_policy_id   = "${var.existing_vpn_gateway_region}/${var.existing_ike_policy_id}"
+    existing_ipsec_policy_id = "${var.existing_vpn_gateway_region}/${var.existing_ipsec_policy_id}"
     peer_config = [
       {
         address = var.remote_site_c_ip
@@ -55,17 +57,6 @@ module "vpn_connection_to_site_c" {
   existing_vpn_gateway_id = var.existing_vpn_gateway_id
   vpn_gateway_name        = null
   vpn_gateway_subnet_id   = null
-
-  # Create simple policies for testing
-  create_vpn_policies            = true
-  ike_policy_name                = "${var.prefix}-test-ike-policy"
-  ike_authentication_algorithm   = "sha256"
-  ike_encryption_algorithm       = "aes256"
-  ike_dh_group                   = 14
-  ipsec_policy_name              = "${var.prefix}-test-ipsec-policy"
-  ipsec_encryption_algorithm     = "aes256"
-  ipsec_authentication_algorithm = "sha256"
-  ipsec_pfs                      = "group_14"
 
   # Create VPN Connection
   vpn_connections = [local.vpn_conn]

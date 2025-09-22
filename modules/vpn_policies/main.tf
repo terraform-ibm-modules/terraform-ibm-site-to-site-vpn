@@ -21,13 +21,14 @@ locals {
 ###########################################################################################
 
 resource "ibm_is_ike_policy" "ike" {
-  name                     = var.ike_policy_name
+  for_each                 = { for conn in var.vpn_connections : conn.name => conn if conn.create_ike_policy }
+  name                     = each.value.ike_policy_config.name
   resource_group           = var.resource_group
-  authentication_algorithm = var.ike_authentication_algorithm
-  encryption_algorithm     = var.ike_encryption_algorithm
-  dh_group                 = var.ike_dh_group
-  ike_version              = var.ike_version
-  key_lifetime             = var.ike_key_lifetime
+  authentication_algorithm = each.value.ike_policy_config.authentication_algorithm
+  encryption_algorithm     = each.value.ike_policy_config.encryption_algorithm
+  dh_group                 = each.value.ike_policy_config.dh_group
+  ike_version              = each.value.ike_policy_config.version
+  key_lifetime             = each.value.ike_policy_config.key_lifetime
 }
 
 
@@ -35,12 +36,13 @@ resource "ibm_is_ike_policy" "ike" {
 # Internet Protocol Security (IPSec) Policy
 ###########################################################################################
 resource "ibm_is_ipsec_policy" "ipsec" {
-  name                     = var.ipsec_policy_name
+  for_each                 = { for conn in var.vpn_connections : conn.name => conn if conn.create_ipsec_policy }
+  name                     = each.value.ipsec_policy_config.name
   resource_group           = var.resource_group
-  authentication_algorithm = var.ipsec_authentication_algorithm
-  encryption_algorithm     = var.ipsec_encryption_algorithm
-  pfs                      = var.ipsec_pfs
-  key_lifetime             = var.ipsec_key_lifetime
+  authentication_algorithm = each.value.ipsec_policy_config.authentication_algorithm
+  encryption_algorithm     = each.value.ipsec_policy_config.encryption_algorithm
+  pfs                      = each.value.ipsec_policy_config.pfs
+  key_lifetime             = each.value.ipsec_policy_config.key_lifetime
 }
 
 ###########################################################################################

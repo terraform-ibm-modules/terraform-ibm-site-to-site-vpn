@@ -6,118 +6,120 @@ variable "resource_group" {
 }
 
 ##############################################################################
-# IKE Policy
+# VPN Connections - Policy Configuration
 ##############################################################################
 
-variable "ike_policy_name" {
-  description = "The name of the IKE policy to create."
-  type        = string
-}
+variable "vpn_connections" {
+  description = "List of VPN Connections with IKE and IPSec configuration. Each connection will create a new IKE/IPSec policy."
+  type = list(object({
+    name = string # VPN Connection Name
 
-variable "ike_authentication_algorithm" {
-  description = "The authentication algorithm used in the IKE policy. Valid values: sha256, sha384, sha512."
-  type        = string
+    # IKE Policy
 
+    create_ike_policy      = optional(bool, false)
+    existing_ike_policy_id = optional(string, null)
+    ike_policy_config = optional(object({
+      name                     = string
+      authentication_algorithm = string
+      encryption_algorithm     = string
+      dh_group                 = number
+      version                  = optional(number, 2)
+      key_lifetime             = optional(number, 28800)
+    }), null)
+
+    # IPSec Policy
+
+    create_ipsec_policy      = optional(bool, false)
+    existing_ipsec_policy_id = optional(string, null)
+    ipsec_policy_config = optional(object({
+      name                     = string
+      encryption_algorithm     = string
+      authentication_algorithm = string
+      pfs                      = string
+      key_lifetime             = optional(number, 3600)
+    }), null)
+
+  }))
+
+  # Value specific checks
   validation {
-    condition     = contains(local.ike_policy.authentication_algo, var.ike_authentication_algorithm)
-    error_message = "Authentication algorithm must be one of: sha256, sha384, sha512."
-  }
-}
-
-variable "ike_encryption_algorithm" {
-  description = "The encryption algorithm used in the IKE policy. Valid values: aes128, aes192, aes256."
-  type        = string
-
-  validation {
-    condition     = contains(local.ike_policy.encryption_algo, var.ike_encryption_algorithm)
-    error_message = "Encryption algorithm must be one of: aes128, aes192, aes256."
-  }
-}
-
-variable "ike_dh_group" {
-  description = "The Diffie-Hellman group to use. Valid values: 14 to 24, or 31."
-  type        = number
-
-  validation {
-    condition     = contains(local.ike_policy.dh_groups, var.ike_dh_group)
-    error_message = "DH group must be one of: 14 to 24, or 31."
-  }
-}
-
-variable "ike_version" {
-  description = "The IKE protocol version to use. Valid values: 1 or 2."
-  type        = number
-  default     = 2
-
-  validation {
-    condition     = contains(local.ike_policy.versions, var.ike_version)
-    error_message = "IKE version must be either 1 or 2."
-  }
-}
-
-variable "ike_key_lifetime" {
-  description = "The key lifetime in seconds. Must be between 1800 and 86400."
-  type        = number
-  default     = 28800
-
-  validation {
-    condition     = var.ike_key_lifetime >= 1800 && var.ike_key_lifetime <= 86400
-    error_message = "IKE lifetime key must be between 1800 and 86400 seconds."
-  }
-}
-
-##############################################################################
-# IPSec Policy
-##############################################################################
-
-variable "ipsec_policy_name" {
-  description = "The name of the IPSec policy to create."
-  type        = string
-}
-
-variable "ipsec_encryption_algorithm" {
-  description = "The encryption algorithm for the IPSec policy. Valid values: aes128, aes192, aes256, aes128gcm16, aes192gcm16, aes256gcm16."
-  type        = string
-
-  validation {
-    condition     = contains(local.ipsec_policy.encryption_algo, var.ipsec_encryption_algorithm)
-    error_message = "Encryption algorithm must be one of: aes128, aes192, aes256, aes128gcm16, aes192gcm16, aes256gcm16."
-  }
-}
-
-variable "ipsec_authentication_algorithm" {
-  description = "The authentication algorithm for the IPSec policy. Valid values: sha256, sha384, sha512, disabled."
-  type        = string
-
-  validation {
-    condition     = contains(local.ipsec_policy.authentication_algo, var.ipsec_authentication_algorithm)
-    error_message = "Authentication algorithm must be one of: sha256, sha384, sha512 or disabled."
+    condition = alltrue([
+      for conn in var.vpn_connections :
+      conn.ike_policy_config != null ? contains(local.ike_policy.authentication_algo, conn.ike_policy_config.authentication_algorithm) : (conn.existing_ike_policy_id != null)
+    ])
+    error_message = "Please provide a valid IKE Configuration and IKE authentication algorithm must be one of: sha256, sha384, sha512."
   }
 
   validation {
-    condition     = var.ipsec_authentication_algorithm != "disabled" || contains(local.ipsec_policy.gcm_variant, var.ipsec_encryption_algorithm)
-    error_message = "If the value of IPSec Authentication algorithm is set to 'disabled', value of IPSec Encryption algorithm must be a GCM variant i.e aes128gcm16, aes192gcm16, aes256gcm16."
+    condition = alltrue([
+      for conn in var.vpn_connections :
+      conn.ike_policy_config != null ? contains(local.ike_policy.encryption_algo, conn.ike_policy_config.encryption_algorithm) : (conn.existing_ike_policy_id != null)
+    ])
+    error_message = "Please provide a valid IKE Configuration and IKE encryption algorithm must be one of: aes128, aes192, aes256."
   }
 
-}
-
-variable "ipsec_pfs" {
-  description = "The Perfect Forward Secrecy (PFS) protocol for the IPSec policy. Valid values: disabled, group_2, group_5, group_14."
-  type        = string
-
   validation {
-    condition     = contains(local.ipsec_policy.pfs, var.ipsec_pfs)
-    error_message = "PFS must be one of: disabled, group_2, group_5, group_14."
+    condition = alltrue([
+      for conn in var.vpn_connections :
+      conn.ike_policy_config != null ? contains(local.ike_policy.dh_groups, conn.ike_policy_config.dh_group) : (conn.existing_ike_policy_id != null)
+    ])
+    error_message = "Please provide a valid IKE Configuration and IKE Diffie-Hellman (DH) group must be one of: 14 to 24, or 31."
   }
-}
-
-variable "ipsec_key_lifetime" {
-  description = "The key lifetime for the IPSec policy in seconds. Must be between 300 and 86400."
-  type        = number
-  default     = 3600
 
   validation {
-    condition     = var.ipsec_key_lifetime >= 300 && var.ipsec_key_lifetime <= 86400
-    error_message = "Key lifetime must be between 300 and 86400 seconds."
+    condition = alltrue([
+      for conn in var.vpn_connections :
+      conn.ike_policy_config != null ? contains(local.ike_policy.versions, conn.ike_policy_config.version) : (conn.existing_ike_policy_id != null)
+    ])
+    error_message = "Please provide a valid IKE Configuration and IKE protocol version must be either 1 or 2."
+  }
+
+  validation {
+    condition = alltrue([
+      for conn in var.vpn_connections :
+      conn.ike_policy_config != null ? (conn.ike_policy_config.key_lifetime >= 1800 && conn.ike_policy_config.key_lifetime <= 86400) : (conn.existing_ike_policy_id != null)
+    ])
+    error_message = "Please provide a valid IKE Configuration and IKE key lifetime must be between 1800 and 86400 seconds."
+  }
+
+  # IPSec validations
+  validation {
+    condition = alltrue([
+      for conn in var.vpn_connections :
+      conn.ipsec_policy_config != null ? contains(local.ipsec_policy.encryption_algo, conn.ipsec_policy_config.encryption_algorithm) : (conn.existing_ipsec_policy_id != null)
+    ])
+    error_message = "Please provide a valid IPSec Configuration and IPSec encryption algorithm must be one of: aes128, aes192, aes256, aes128gcm16, aes192gcm16, aes256gcm16."
+  }
+
+  validation {
+    condition = alltrue([
+      for conn in var.vpn_connections :
+      conn.ipsec_policy_config != null ? contains(local.ipsec_policy.authentication_algo, conn.ipsec_policy_config.authentication_algorithm) : (conn.existing_ipsec_policy_id != null)
+    ])
+    error_message = "Please provide a valid IPSec Configuration and IPSec authentication algorithm must be one of: sha256, sha384, sha512, disabled."
+  }
+
+  validation {
+    condition = alltrue([
+      for conn in var.vpn_connections :
+      conn.ipsec_policy_config != null ? (conn.ipsec_policy_config.authentication_algorithm != "disabled" || contains(local.ipsec_policy.gcm_variant, conn.ipsec_policy_config.encryption_algorithm)) : (conn.existing_ipsec_policy_id != null)
+    ])
+    error_message = "Please provide a valid IPSec Configuration. If the value of IPSec Authentication algorithm is set to 'disabled', value of IPSec Encryption algorithm must be a GCM variant i.e aes128gcm16, aes192gcm16, aes256gcm16."
+  }
+
+  validation {
+    condition = alltrue([
+      for conn in var.vpn_connections :
+      conn.ipsec_policy_config != null ? contains(local.ipsec_policy.pfs, conn.ipsec_policy_config.pfs) : (conn.existing_ipsec_policy_id != null)
+    ])
+    error_message = "Please provide a valid IPSec Configuration and IPSec Perfect Forward Secrecy (PFS) protocol must be one of: disabled, group_2, group_5, group_14."
+  }
+
+  validation {
+    condition = alltrue([
+      for conn in var.vpn_connections :
+      conn.ipsec_policy_config != null ? (conn.ipsec_policy_config.key_lifetime >= 300 && conn.ipsec_policy_config.key_lifetime <= 86400) : (conn.existing_ipsec_policy_id != null)
+    ])
+    error_message = "Please provide a valid IPSec Configuration and IPSec key lifetime must be between 300 and 86400 seconds."
   }
 }

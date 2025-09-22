@@ -14,14 +14,10 @@ output "subnet_id" {
 ##############################################################################
 # Policies
 ##############################################################################
-output "ike_policies" {
-  description = "IKE policies information."
-  value       = module.vpn_gateway_single_site.ike_policy
-}
 
-output "ipsec_policies" {
-  description = "IPSec policies information."
-  value       = module.vpn_gateway_single_site.ipsec_policy
+output "vpn_connection_policies" {
+  description = "VPN Connection policies information."
+  value       = module.vpn_gateway_single_site.vpn_connection_policies[local.connection_name]
 }
 
 ##############################################################################

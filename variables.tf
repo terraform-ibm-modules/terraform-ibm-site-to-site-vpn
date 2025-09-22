@@ -79,6 +79,34 @@ variable "vpn_connections" {
     dpd_check_interval        = optional(number, 2)               # Interval in seconds between dead peer detection checks for peer responsiveness.
     dpd_max_timeout           = optional(number, 10)              # Time in seconds to wait before considering the peer unreachable.
 
+    # Policy configuration per connection
+
+    # IKE Policy
+    create_ike_policy      = optional(bool, false)  # Flag to create new IKE policy.
+    existing_ike_policy_id = optional(string, null) # ID of existing IKE policy to use (mutually exclusive with create_ike_policy)
+
+    ike_policy_config = optional(object({
+      name                     = string
+      authentication_algorithm = string # sha256, sha384, sha512
+      encryption_algorithm     = string # aes128, aes192, aes256
+      dh_group                 = number # 14-24, 31
+      ike_version              = optional(number, 2)
+      key_lifetime             = optional(number, 28800)
+    }), null) # Provide config only if create_ike_policy is true
+
+    # IPSec policy
+    create_ipsec_policy      = optional(bool, false)  # Flag to create new IPSec policy
+    existing_ipsec_policy_id = optional(string, null) # ID of existing IPSec policy to use (mutually exclusive with create_ipsec_policy)
+
+    ipsec_policy_config = optional(object({
+      name                     = string
+      encryption_algorithm     = string # aes128, aes192, aes256, aes128gcm16, aes192gcm16, aes256gcm16
+      authentication_algorithm = string # sha256, sha384, sha512, disabled
+      pfs                      = string # disabled, group_2, group_5, group_14
+      key_lifetime             = optional(number, 3600)
+    }), null) # Provide config only if create_ipsec_policy is true
+
+    # Peer and Local Configuration
     peer_config = optional(list(object({
       address = optional(string)
       fqdn    = optional(string)
@@ -216,110 +244,53 @@ variable "vpn_connections" {
     ])
     error_message = "For Policy based VPN, each local_config must define at least one CIDR."
   }
-}
 
-###############################################################################
-# Policies
-# ##############################################################################
+  # IKE/IPSec Policies validations
 
-variable "existing_ike_policy_id" {
-  description = "ID of existing IKE policy to use instead of creating new one."
-  type        = string
-  default     = null
-}
-
-variable "existing_ipsec_policy_id" {
-  description = "ID of existing IPSec policy to use instead of creating new one."
-  type        = string
-  default     = null
-}
-
-variable "create_vpn_policies" {
-  description = "Whether to create a new IKE and IPSec policy."
-  type        = bool
-  default     = false
+  # Mutually Exclusive validations
+  validation {
+    condition = alltrue([
+      for conn in var.vpn_connections :
+      !(conn.create_ike_policy && conn.existing_ike_policy_id != null && conn.existing_ike_policy_id != "")
+    ])
+    error_message = "Please provide either create_ike_policy or an existing_ike_policy_id, but not both for one connection."
+  }
 
   validation {
-    condition = !var.create_vpn_policies || (
-      var.ike_policy_name != null &&
-      var.ike_authentication_algorithm != null &&
-      var.ike_encryption_algorithm != null &&
-      var.ike_dh_group != null &&
-      var.ipsec_policy_name != null &&
-      var.ipsec_encryption_algorithm != null &&
-      var.ipsec_authentication_algorithm != null &&
-      var.ipsec_pfs != null
-    )
-    error_message = "When create_vpn_policies is true, all policy configuration variables must be provided: ike_policy_name, ike_authentication_algorithm, ike_encryption_algorithm, ike_dh_group, ipsec_policy_name, ipsec_encryption_algorithm, ipsec_authentication_algorithm, ipsec_pfs."
+    condition = alltrue([
+      for conn in var.vpn_connections :
+      !(conn.create_ipsec_policy && conn.existing_ipsec_policy_id != null && conn.existing_ipsec_policy_id != "")
+    ])
+    error_message = "Please provide either create_ipsec_policy or an existing_ipsec_policy_id, but not both for one connection."
   }
-}
 
-# IKE Policy inputs
-variable "ike_policy_name" {
-  description = "Name of the IKE policy to create. Applicable when create_vpn_policies is true"
-  type        = string
-  default     = null
-}
+  validation {
+    condition = alltrue([
+      for conn in var.vpn_connections :
+      conn.ike_policy_config != null ? (
+        conn.create_ike_policy &&
+        conn.ike_policy_config.name != null &&
+        conn.ike_policy_config.authentication_algorithm != null &&
+        conn.ike_policy_config.encryption_algorithm != null &&
+        conn.ike_policy_config.dh_group != null
+      ) : (!conn.create_ike_policy && conn.existing_ike_policy_id != null)
+    ])
+    error_message = "When create_ike_policy=true, ike_policy_config must be provided with all required fields: name, authentication_algorithm, encryption_algorithm, dh_group. If false, use existing IKE Policy Id."
+  }
 
-variable "ike_authentication_algorithm" {
-  description = "The authentication algorithm used in the IKE policy. Valid values: sha256, sha384, sha512."
-  type        = string
-  default     = null
-}
-
-variable "ike_encryption_algorithm" {
-  description = "The encryption algorithm used in the IKE policy. Valid values: aes128, aes192, aes256."
-  type        = string
-  default     = null
-}
-
-variable "ike_dh_group" {
-  description = "The Diffie-Hellman group to use. Valid values: 14 to 24, or 31."
-  type        = number
-  default     = null
-}
-
-variable "ike_version" {
-  description = "The IKE protocol version to use. Valid values: 1 or 2."
-  type        = number
-  default     = 2
-}
-
-variable "ike_key_lifetime" {
-  description = "The key lifetime in seconds. Must be between 1800 and 86400."
-  type        = number
-  default     = 28800
-}
-
-# IPSec Policy inputs
-variable "ipsec_policy_name" {
-  description = "Name of the IPSec policy to create."
-  type        = string
-  default     = null
-}
-
-variable "ipsec_encryption_algorithm" {
-  description = "The encryption algorithm for the IPSec policy. Valid values: aes128, aes192, aes256, aes128gcm16, aes192gcm16, aes256gcm16."
-  type        = string
-  default     = null
-}
-
-variable "ipsec_authentication_algorithm" {
-  description = "The authentication algorithm for the IPSec policy. Valid values: sha256, sha384, sha512, disabled."
-  type        = string
-  default     = null
-}
-
-variable "ipsec_pfs" {
-  description = "The Perfect Forward Secrecy (PFS) protocol for the IPSec policy. Valid values: disabled, group_2, group_5, group_14."
-  type        = string
-  default     = null
-}
-
-variable "ipsec_key_lifetime" {
-  description = "The key lifetime for the IPSec policy in seconds. Must be between 300 and 86400."
-  type        = number
-  default     = 3600
+  validation {
+    condition = alltrue([
+      for conn in var.vpn_connections :
+      conn.ipsec_policy_config != null ? (
+        conn.create_ipsec_policy &&
+        conn.ipsec_policy_config.name != null &&
+        conn.ipsec_policy_config.authentication_algorithm != null &&
+        conn.ipsec_policy_config.encryption_algorithm != null &&
+        conn.ipsec_policy_config.pfs != null
+      ) : (!conn.create_ipsec_policy && conn.existing_ipsec_policy_id != null)
+    ])
+    error_message = "When create_ipsec_policy=true, ipsec_policy_config must be provided with all required fields: name, encryption_algorithm, authentication_algorithm, pfs. If false, use existing IPSec Policy Id."
+  }
 }
 
 # ##############################################################################
