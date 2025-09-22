@@ -245,52 +245,68 @@ variable "vpn_connections" {
     error_message = "For Policy based VPN, each local_config must define at least one CIDR."
   }
 
-  # Policies validations
+  # IKE/IPSec Policies validations
 
+  # Mutually Exclusive validations
   validation {
     condition = alltrue([
       for conn in var.vpn_connections :
-      !(conn.create_ike_policy && conn.existing_ike_policy_id != null)
+      !(conn.create_ike_policy && conn.existing_ike_policy_id != null && conn.existing_ike_policy_id != "")
     ])
-    error_message = "Cannot specify both create_ike_policy=true and existing_ike_policy_id for the same connection."
+    error_message = "Please provide either create_ike_policy or an existing_ike_policy_id, but not both for one connection."
   }
 
   validation {
     condition = alltrue([
       for conn in var.vpn_connections :
-      !(conn.create_ipsec_policy && conn.existing_ipsec_policy_id != null)
+      !(conn.create_ipsec_policy && conn.existing_ipsec_policy_id != null && conn.existing_ipsec_policy_id != "")
     ])
-    error_message = "Cannot specify both create_ipsec_policy=true and existing_ipsec_policy_id for the same connection."
+    error_message = "Please provide either create_ipsec_policy or an existing_ipsec_policy_id, but not both for one connection."
   }
 
   validation {
     condition = alltrue([
       for conn in var.vpn_connections :
-      (!conn.create_ike_policy && conn.ike_policy_config == null && conn.existing_ike_policy_id != null) || (
+      conn.ike_policy_config != null ? (
         conn.create_ike_policy &&
-        can(conn.ike_policy_config.name) &&
-        can(conn.ike_policy_config.authentication_algorithm) &&
-        can(conn.ike_policy_config.encryption_algorithm) &&
-        can(conn.ike_policy_config.dh_group)
-      )
+        # conn.existing_ike_policy_id == null &&
+        conn.ike_policy_config.name != null &&
+        conn.ike_policy_config.authentication_algorithm != null &&
+        conn.ike_policy_config.encryption_algorithm != null &&
+        conn.ike_policy_config.dh_group != null
+      ) : (!conn.create_ike_policy && conn.existing_ike_policy_id != null)
     ])
-    error_message = "When create_ike_policy is true, all IKE policy configuration variables must be provided: ike_policy_name, ike_authentication_algorithm, ike_encryption_algorithm, ike_dh_group. If create_ike_policy = false, ike_policy_config must be null."
+    error_message = "When create_ike_policy=true, ike_policy_config must be provided with all required fields: name, authentication_algorithm, encryption_algorithm, dh_group. If false, use existing IKE Policy Id."
   }
 
   validation {
     condition = alltrue([
       for conn in var.vpn_connections :
-      (
-        !conn.create_ipsec_policy && conn.ipsec_policy_config == null && conn.existing_ipsec_policy_id != null) || (
+      conn.ipsec_policy_config != null ? (
         conn.create_ipsec_policy &&
-        can(conn.ipsec_policy_config.name) &&
-        can(conn.ipsec_policy_config.encryption_algorithm) &&
-        can(conn.ipsec_policy_config.authentication_algorithm) &&
-        can(conn.ipsec_policy_config.pfs)
-      )
+        # conn.existing_ipsec_policy_id == null &&
+        conn.ipsec_policy_config.name != null &&
+        conn.ipsec_policy_config.authentication_algorithm != null &&
+        conn.ipsec_policy_config.encryption_algorithm != null &&
+        conn.ipsec_policy_config.pfs != null
+      ) : (!conn.create_ipsec_policy && conn.existing_ipsec_policy_id != null)
     ])
-    error_message = "When create_ipsec_policy is true, all IPSec policy configuration variables must be provided: ipsec_policy_name, ipsec_encryption_algorithm, ipsec_authentication_algorithm, ipsec_pfs. If create_ipsec_policy = false, ipsec_policy_config must be null"
+    error_message = "When create_ipsec_policy=true, ipsec_policy_config must be provided with all required fields: name, encryption_algorithm, authentication_algorithm, pfs. If false, use existing IPSec Policy Id."
   }
+  # validation {
+  #   condition = alltrue([
+  #     for conn in var.vpn_connections :
+  #       conn.create_ipsec_policy ? (
+  #         conn.ipsec_policy_config != null ? (
+  #           conn.ipsec_policy_config.name != null &&
+  #           conn.ipsec_policy_config.authentication_algorithm  != null &&
+  #           conn.ipsec_policy_config.encryption_algorithm  != null &&
+  #           conn.ipsec_policy_config.pfs != null
+  #         ): false
+  #       ):conn.existing_ipsec_policy_id != null ? conn.existing_ipsec_policy_id : false
+  #   ])
+  #   error_message = "When create_ipsec_policy=true, ipsec_policy_config must be provided with all required fields: name, encryption_algorithm, authentication_algorithm, pfs. If false, use existing IKE Policy Id."
+  # }
 }
 
 # ##############################################################################

@@ -7,12 +7,12 @@ output "vpn_connection_policies" {
   value = {
     for conn in var.vpn_connections : conn.name => {
       ike_policy = {
-        id               = conn.existing_ike_policy_id != null ? conn.existing_ike_policy_id : module.vpn_policies[0].ike_policy_ids[conn.name]
+        id               = conn.existing_ike_policy_id != null ? conn.existing_ike_policy_id : try(module.vpn_policies[0].ike_policy_ids[conn.name], null)
         vpn_connections  = try(module.vpn_policies[0].ike_vpn_connections[conn.name], null)
         negotiation_mode = try(module.vpn_policies[0].ike_negotiation_mode[conn.name], null)
       }
       ipsec_policy = {
-        id                 = conn.existing_ipsec_policy_id != null ? conn.existing_ipsec_policy_id : module.vpn_policies[0].ipsec_policy_ids[conn.name]
+        id                 = conn.existing_ipsec_policy_id != null ? conn.existing_ipsec_policy_id : try(module.vpn_policies[0].ipsec_policy_ids[conn.name], null)
         vpn_connections    = try(module.vpn_policies[0].ipsec_vpn_connections[conn.name], null)
         encapsulation_mode = try(module.vpn_policies[0].ipsec_encapsulation_mode[conn.name], null)
         transform_protocol = try(module.vpn_policies[0].ipsec_transform_protocol[conn.name], null)

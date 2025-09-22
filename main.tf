@@ -12,7 +12,8 @@ module "vpn_policies" {
       name = conn.name
 
       # IKE Policy
-      create_ike_policy = conn.create_ike_policy
+      create_ike_policy      = conn.create_ike_policy
+      existing_ike_policy_id = conn.existing_ike_policy_id
       ike_policy_config = conn.create_ike_policy ? {
         name                     = conn.ike_policy_config.name
         authentication_algorithm = conn.ike_policy_config.authentication_algorithm
@@ -23,7 +24,8 @@ module "vpn_policies" {
       } : null
 
       # IPSec Policy
-      create_ipsec_policy = conn.create_ipsec_policy
+      create_ipsec_policy      = conn.create_ipsec_policy
+      existing_ipsec_policy_id = conn.existing_ipsec_policy_id
       ipsec_policy_config = conn.create_ipsec_policy ? {
         name                     = conn.ipsec_policy_config.name
         encryption_algorithm     = conn.ipsec_policy_config.encryption_algorithm
@@ -71,8 +73,8 @@ locals {
 
   connection_policies = {
     for conn in var.vpn_connections : conn.name => {
-      ike_policy_id   = conn.create_ike_policy ? module.vpn_policies[0].ike_policy_ids[conn.name] : conn.existing_ike_policy_id
-      ipsec_policy_id = conn.create_ipsec_policy ? module.vpn_policies[0].ipsec_policy_ids[conn.name] : conn.existing_ipsec_policy_id
+      ike_policy_id   = conn.create_ike_policy && conn.ike_policy_config != null && length(module.vpn_policies) > 0 ? module.vpn_policies[0].ike_policy_ids[conn.name] : conn.existing_ike_policy_id
+      ipsec_policy_id = conn.create_ipsec_policy && conn.ipsec_policy_config != null && length(module.vpn_policies) > 0 ? module.vpn_policies[0].ipsec_policy_ids[conn.name] : conn.existing_ipsec_policy_id
     }
   }
 }
