@@ -3,6 +3,7 @@
 <details>
 
 <summary> Migration path: v1 to v2 </summary>
+<br/>
 
 * In previous releases, this module supported only a single VPN connection. With the latest release, the module now supports a **list of VPN connections**.
 * As a result, the resource addresses in Terraform state have changed, and a one-time migration step is required.
@@ -199,7 +200,7 @@ With this update, one can now define multiple VPN connections in single module c
 <details>
 
   <summary>Migration path: v2 to v3</summary>
-
+<br/>
 The v3 version incorporates the creation of IKE and IPSec policies per connection. This requires change in the `vpn_connections` variable to carry along the IKE and IPSec policies configuration per connection.
 
 * In previous release, this module supported **list of VPN connections** but the creation of IKE and IPSec policies were done only once and was same for all connections.
