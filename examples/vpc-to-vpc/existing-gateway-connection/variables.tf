@@ -8,14 +8,10 @@ variable "ibmcloud_api_key" {
   sensitive   = true
 }
 
-variable "existing_vpn_gateway_region" {
+variable "resource_group" {
   type        = string
-  description = "Region where the public gateway is located."
-}
-
-variable "existing_vpn_gateway_id" {
-  type        = string
-  description = "ID of the existing VPN gateway to add the new connection to."
+  description = "The name of an existing resource group to provision resources in to. If not set a new resource group will be created using the prefix variable."
+  default     = null
 }
 
 variable "prefix" {
@@ -24,10 +20,14 @@ variable "prefix" {
   default     = "test-existing-gw"
 }
 
-variable "resource_group" {
+variable "existing_vpn_gateway_region" {
   type        = string
-  description = "The name of an existing resource group to provision resources in to. If not set a new resource group will be created using the prefix variable."
-  default     = null
+  description = "Region where the public gateway is located."
+}
+
+variable "existing_vpn_gateway_id" {
+  type        = string
+  description = "ID of the existing VPN gateway to add the new connection to."
 }
 
 variable "preshared_key" {
@@ -53,4 +53,14 @@ variable "remote_site_c_ip" {
   type        = string
   description = "Public IP address of the remote site C VPN gateway."
   default     = "203.0.113.50"
+}
+
+variable "existing_ike_policy_id" {
+  type        = string
+  description = "ID of the existing IKE policy to add to VPN Connection."
+}
+
+variable "existing_ipsec_policy_id" {
+  type        = string
+  description = "ID of the existing IPSec policy to add to VPN Connection."
 }

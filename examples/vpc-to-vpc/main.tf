@@ -4,10 +4,6 @@
 
 locals {
 
-  # Policies
-  ike_policy_name   = "${var.prefix}-ike-policy"
-  ipsec_policy_name = "${var.prefix}-ipsec-policy"
-
   # VPN Gateways
   vpn_gateway_site_a_name = "${var.prefix}-vpn-gw-site-a"
   vpn_gateway_site_b_name = "${var.prefix}-vpn-gw-site-b"
@@ -23,6 +19,36 @@ locals {
   # Routing Table
   route_table_site_a_to_site_b = "${var.prefix}-a-to-b-rt"
   route_table_site_b_to_site_a = "${var.prefix}-b-to-a-rt"
+
+  # IKE Policy configuration
+  ike_policy_config_site_a = {
+    name                     = "${var.prefix}-ike-policy-site-a"
+    authentication_algorithm = "sha256"
+    encryption_algorithm     = "aes256"
+    dh_group                 = 14
+  }
+
+  ike_policy_config_site_b = {
+    name                     = "${var.prefix}-ike-policy-site-b"
+    authentication_algorithm = "sha256"
+    encryption_algorithm     = "aes256"
+    dh_group                 = 14
+  }
+
+  # IPSec Policy configuration
+  ipsec_policy_config_site_a = {
+    name                     = "${var.prefix}-ipsec-policy-site-a"
+    encryption_algorithm     = "aes256"
+    authentication_algorithm = "sha256"
+    pfs                      = "group_14"
+  }
+
+  ipsec_policy_config_site_b = {
+    name                     = "${var.prefix}-ipsec-policy-site-b"
+    encryption_algorithm     = "aes256"
+    authentication_algorithm = "sha256"
+    pfs                      = "group_14"
+  }
 }
 
 locals {
@@ -44,6 +70,12 @@ locals {
   vpn_conn_a_to_b = {
     name          = local.vpn_connection_name_site_a
     preshared_key = var.preshared_key
+
+    # Policies configuration (creating new policies for this connection)
+    create_ike_policy   = true
+    create_ipsec_policy = true
+    ike_policy_config   = local.ike_policy_config_site_a
+    ipsec_policy_config = local.ipsec_policy_config_site_a
 
     peer_config = [
       {
@@ -76,6 +108,12 @@ locals {
   vpn_conn_b_to_a = {
     name          = local.vpn_connection_name_site_b
     preshared_key = var.preshared_key
+
+    # Policies configuration (creating new policies for this connection)
+    create_ike_policy   = true
+    create_ipsec_policy = true
+    ike_policy_config   = local.ike_policy_config_site_b
+    ipsec_policy_config = local.ipsec_policy_config_site_b
 
     peer_config = [
       {
@@ -123,18 +161,6 @@ module "vpn_gateway_site_a" {
   vpn_gateway_subnet_id = ibm_is_subnet.subnet_site_a.id
   vpn_gateway_mode      = "route"
 
-  # policies
-
-  create_vpn_policies            = true
-  ike_policy_name                = local.ike_policy_name
-  ike_authentication_algorithm   = "sha256"
-  ike_encryption_algorithm       = "aes256"
-  ike_dh_group                   = 14
-  ipsec_policy_name              = local.ipsec_policy_name
-  ipsec_encryption_algorithm     = "aes256"
-  ipsec_authentication_algorithm = "sha256"
-  ipsec_pfs                      = "group_14"
-
   # Create vpn gateway connection from A to B
   vpn_connections = [local.vpn_conn_a_to_b]
 
@@ -175,18 +201,6 @@ module "vpn_gateway_site_b" {
   vpn_gateway_name      = local.vpn_gateway_site_b_name
   vpn_gateway_subnet_id = ibm_is_subnet.subnet_site_b.id
   vpn_gateway_mode      = "route"
-
-  # Policies
-
-  create_vpn_policies            = true
-  ike_policy_name                = local.ike_policy_name
-  ike_authentication_algorithm   = "sha256"
-  ike_encryption_algorithm       = "aes256"
-  ike_dh_group                   = 14
-  ipsec_policy_name              = local.ipsec_policy_name
-  ipsec_encryption_algorithm     = "aes256"
-  ipsec_authentication_algorithm = "sha256"
-  ipsec_pfs                      = "group_14"
 
   # Create vpn gateway connection from B to A
   vpn_connections = [local.vpn_conn_b_to_a]

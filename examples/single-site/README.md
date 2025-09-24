@@ -1,4 +1,3 @@
-
 # Single Site VPN Example
 
 This example demonstrates the recommended pattern for creating a single VPN site
@@ -17,7 +16,7 @@ A policy-based VPN creates one tunnel per target network (CIDR), and routing is 
 > Please note:
 For policy-based VPN:
 
-- IBM Cloud may not show any route table attachments, as policy-based VPN does not use routing tables.
+- IBM Cloud may not show any route table attachments, as policy-based VPN usually not use routing tables.
 - The VPN connection must be established for traffic to flow.
   If IKE/IPSec negotiation fails (PSK mismatch, missing local or peer CIDRs, or peer not reachable), the tunnel will not come up.
 - Each tunnel is created for the specified CIDRs. Ensure that both local and peer CIDRs are correctly configured.

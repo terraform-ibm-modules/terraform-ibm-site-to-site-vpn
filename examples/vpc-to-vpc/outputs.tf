@@ -82,6 +82,16 @@ output "vpn_gateway_connection_ids" {
   }
 }
 
+output "vpn_connection_policies_site_a" {
+  description = "VPN Connection policies for Site A."
+  value       = module.vpn_gateway_site_a.vpn_connection_policies[local.vpn_connection_name_site_a]
+}
+
+output "vpn_connection_policies_site_b" {
+  description = "VPN Connection policies for Site B."
+  value       = module.vpn_gateway_site_b.vpn_connection_policies[local.vpn_connection_name_site_b]
+}
+
 ##############################################################################
 # VPN Routes
 ##############################################################################
