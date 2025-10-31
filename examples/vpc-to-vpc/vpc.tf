@@ -22,7 +22,7 @@ locals {
   cidr_block_site_a = "10.100.10.0/24"
   cidr_block_site_b = "172.16.10.0/24"
   vsi_profile       = "bx2-2x8"
-  vsi_image         = "ibm-ubuntu-22-04-3-minimal-amd64-1"
+  vsi_image         = "ibm-ubuntu-24-04-3-minimal-amd64-3"
   vpc_id_site_a     = ibm_is_vpc.vpc_site_a.id
   vpc_id_site_b     = ibm_is_vpc.vpc_site_b.id
 
