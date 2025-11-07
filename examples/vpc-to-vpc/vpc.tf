@@ -22,7 +22,6 @@ locals {
   cidr_block_site_a = "10.100.10.0/24"
   cidr_block_site_b = "172.16.10.0/24"
   vsi_profile       = "bx2-2x8"
-  vsi_image         = "ibm-ubuntu-24-04-3-minimal-amd64-3"
   vpc_id_site_a     = ibm_is_vpc.vpc_site_a.id
   vpc_id_site_b     = ibm_is_vpc.vpc_site_b.id
 
@@ -83,14 +82,21 @@ resource "ibm_is_ssh_key" "public_key_site_b" {
 ##############################################################################
 # VSI Image
 ##############################################################################
-data "ibm_is_image" "image_site_a" {
-  provider = ibm.site_a
-  name     = local.vsi_image
+
+module "vsi_image_selector_site_a" {
+  providers = {
+    ibm = ibm.site_a
+  }
+  source  = "terraform-ibm-modules/common-utilities/ibm//modules/vsi-image-selector"
+  version = "1.3.0"
 }
 
-data "ibm_is_image" "image_site_b" {
-  provider = ibm.site_b
-  name     = local.vsi_image
+module "vsi_image_selector_site_b" {
+  providers = {
+    ibm = ibm.site_b
+  }
+  source  = "terraform-ibm-modules/common-utilities/ibm//modules/vsi-image-selector"
+  version = "1.3.0"
 }
 
 ##############################################################################
@@ -245,7 +251,7 @@ resource "ibm_is_instance" "vsi_site_a" {
   provider = ibm.site_a
   count    = 1
   name     = "${var.prefix}-vsi-site-a"
-  image    = data.ibm_is_image.image_site_a.id
+  image    = module.vsi_image_selector_site_a.latest_image_id
   profile  = local.vsi_profile
 
   primary_network_attachment {
@@ -267,7 +273,7 @@ resource "ibm_is_instance" "vsi_site_b" {
   provider = ibm.site_b
   count    = 1
   name     = "${var.prefix}-vsi-site-b"
-  image    = data.ibm_is_image.image_site_b.id
+  image    = module.vsi_image_selector_site_b.latest_image_id
   profile  = local.vsi_profile
 
   primary_network_attachment {

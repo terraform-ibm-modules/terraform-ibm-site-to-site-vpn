@@ -21,6 +21,21 @@ output "vsi_private_ips" {
   }
 }
 
+output "vsi_images" {
+  description = "Site A and Site B VSI image details."
+  value = {
+    site_a = {
+      "id" : module.vsi_image_selector_site_a.latest_image_id,
+      "name" : module.vsi_image_selector_site_a.latest_image_name
+    }
+    site_b = {
+      "id" : module.vsi_image_selector_site_b.latest_image_id,
+      "name" : module.vsi_image_selector_site_b.latest_image_name
+    }
+  }
+}
+
+
 output "floating_ip_address" {
   description = "Public Floating IP address of the VSIs for site A and site B."
   value = {
