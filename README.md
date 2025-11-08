@@ -16,10 +16,10 @@ This module automates the provisioning of a site-to-site VPN. For more informati
     * [vpn_policies](./modules/vpn_policies)
     * [vpn_routing](./modules/vpn_routing)
 * [Examples](./examples)
-    * [Adding Connection to Existing VPN Gateway](./examples/vpc-to-vpc/existing-gateway-connection)
-    * [Multiple Connections VPN Example](./examples/multiple-vpn-connections)
-    * [Single Site VPN Example](./examples/single-site)
-    * [VPC to VPC Example](./examples/vpc-to-vpc)
+    * <div style="display: inline-block;"><a href="./examples/multiple-vpn-connections">Multiple Connections VPN Example</a></div> <div style="display: inline-block; vertical-align: middle;"><a href="https://cloud.ibm.com/schematics/workspaces/create?workspace_name=stsv-multiple-vpn-connections-example&repository=github.com/terraform-ibm-modules/terraform-ibm-site-to-site-vpn/tree/main/examples/multiple-vpn-connections" target="_blank"><img src="https://cloud.ibm.com/media/docs/images/icons/Deploy_to_cloud.svg" alt="Deploy to IBM Cloud button"></a></div>
+    * <div style="display: inline-block;"><a href="./examples/single-site">Single Site VPN Example</a></div> <div style="display: inline-block; vertical-align: middle;"><a href="https://cloud.ibm.com/schematics/workspaces/create?workspace_name=stsv-single-site-example&repository=github.com/terraform-ibm-modules/terraform-ibm-site-to-site-vpn/tree/main/examples/single-site" target="_blank"><img src="https://cloud.ibm.com/media/docs/images/icons/Deploy_to_cloud.svg" alt="Deploy to IBM Cloud button"></a></div>
+    * <div style="display: inline-block;"><a href="./examples/vpc-to-vpc">VPC to VPC Example</a></div> <div style="display: inline-block; vertical-align: middle;"><a href="https://cloud.ibm.com/schematics/workspaces/create?workspace_name=stsv-vpc-to-vpc-example&repository=github.com/terraform-ibm-modules/terraform-ibm-site-to-site-vpn/tree/main/examples/vpc-to-vpc" target="_blank"><img src="https://cloud.ibm.com/media/docs/images/icons/Deploy_to_cloud.svg" alt="Deploy to IBM Cloud button"></a></div>
+    * <div style="display: inline-block;"><a href="./examples/vpc-to-vpc/existing-gateway-connection">Adding Connection to Existing VPN Gateway</a></div> <div style="display: inline-block; vertical-align: middle;"><a href="https://cloud.ibm.com/schematics/workspaces/create?workspace_name=stsv-existing-gateway-connection-example&repository=github.com/terraform-ibm-modules/terraform-ibm-site-to-site-vpn/tree/main/examples/vpc-to-vpc/existing-gateway-connection" target="_blank"><img src="https://cloud.ibm.com/media/docs/images/icons/Deploy_to_cloud.svg" alt="Deploy to IBM Cloud button"></a></div>
 * [Contributing](#contributing)
 <!-- END OVERVIEW HOOK -->
 
