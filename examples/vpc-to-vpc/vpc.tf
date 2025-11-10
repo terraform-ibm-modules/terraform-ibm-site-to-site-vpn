@@ -85,7 +85,7 @@ resource "ibm_is_ssh_key" "public_key_site_b" {
 # VSI Image
 ##############################################################################
 
-# This module retrieves the most recent Ubuntu image instead of hardcoding the vsi image name.
+# Use the vsi-image-selector module to determine the current latest ubuntu image in the given region
 module "vsi_image_selector_site_a" {
   providers = {
     ibm = ibm.site_a
