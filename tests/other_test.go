@@ -2,20 +2,20 @@ package test
 
 import (
 	"fmt"
-	"math/rand"
 	"strings"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
+	"github.com/terraform-ibm-modules/ibmcloud-terratest-wrapper/common"
 )
 
 func TestRunMultipleVpnConnectionsExample(t *testing.T) {
 	t.Parallel()
 
 	// Provision Resources to be used by this example
-	var region = validRegions[rand.Intn(len(validRegions))]
+	var region = validRegions[common.CryptoIntn(len(validRegions))]
 	prefixExistingRes := fmt.Sprintf("ex-%s", strings.ToLower(random.UniqueId()))
 	existingTerraformOptions := setupRemoteVPNGateway(t, region, prefixExistingRes, true)
 
