@@ -55,6 +55,7 @@ resource "ibm_is_vpn_gateway" "remote_vpn_gateway" {
   subnet         = ibm_is_subnet.subnet_zone_1[count.index].id
   tags           = var.resource_tags
   timeouts {
+    create = "1h"
     delete = "1h"
   }
 }

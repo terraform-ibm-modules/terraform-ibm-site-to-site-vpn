@@ -5,7 +5,6 @@ package test
 import (
 	"fmt"
 	"log"
-	"math/rand"
 	"os"
 	"strings"
 	"testing"
@@ -68,7 +67,7 @@ func setupOptions(t *testing.T, prefix string, exampleDir string) *testhelper.Te
 	})
 
 	options.TerraformVars = map[string]interface{}{
-		"region":         validRegions[rand.Intn(len(validRegions))],
+		"region":         validRegions[common.CryptoIntn(len(validRegions))],
 		"prefix":         options.Prefix,
 		"resource_group": resourceGroup,
 		"tags":           options.Tags,
@@ -125,7 +124,7 @@ func cleanupResources(t *testing.T, terraformOptions *terraform.Options, prefix 
 func TestRunSingleSiteExample(t *testing.T) {
 	t.Parallel()
 
-	var region = validRegions[rand.Intn(len(validRegions))]
+	var region = validRegions[common.CryptoIntn(len(validRegions))]
 	prefixExistingRes := fmt.Sprintf("ex-%s", strings.ToLower(random.UniqueId()))
 	existingTerraformOptions := setupRemoteVPNGateway(t, region, prefixExistingRes, false)
 
@@ -143,12 +142,12 @@ func TestRunSingleSiteExample(t *testing.T) {
 func TestRunVpcToVpcExample(t *testing.T) {
 	t.Parallel()
 
-	region_site_a := validRegions[rand.Intn(len(validRegions))]
+	region_site_a := validRegions[common.CryptoIntn(len(validRegions))]
 
 	// Ensuring second region is always different from first region
 	var region_site_b string
 	for {
-		region_site_b = validRegions[rand.Intn(len(validRegions))]
+		region_site_b = validRegions[common.CryptoIntn(len(validRegions))]
 		if region_site_b != region_site_a {
 			break
 		}
