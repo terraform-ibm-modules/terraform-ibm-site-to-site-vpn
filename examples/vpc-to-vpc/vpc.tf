@@ -4,7 +4,7 @@
 
 module "resource_group" {
   source                       = "terraform-ibm-modules/resource-group/ibm"
-  version                      = "1.4.3"
+  version                      = "1.4.7"
   existing_resource_group_name = var.resource_group
   providers = {
     ibm = ibm.site_a
@@ -91,7 +91,7 @@ module "vsi_image_selector_site_a" {
     ibm = ibm.site_a
   }
   source           = "terraform-ibm-modules/common-utilities/ibm//modules/vsi-image-selector"
-  version          = "1.3.3"
+  version          = "1.3.6"
   architecture     = local.vsi_image_architecture
   operating_system = local.vsi_image_os
 }
@@ -101,7 +101,7 @@ module "vsi_image_selector_site_b" {
     ibm = ibm.site_b
   }
   source           = "terraform-ibm-modules/common-utilities/ibm//modules/vsi-image-selector"
-  version          = "1.3.3"
+  version          = "1.3.6"
   architecture     = local.vsi_image_architecture
   operating_system = local.vsi_image_os
 }
