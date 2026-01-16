@@ -163,7 +163,7 @@ func TestRunVpcToVpcExample(t *testing.T) {
 		"region_site_b":  region_site_b,
 		"preshared_key":  fmt.Sprintf("ps-key-%s", common.UniqueId(3)),
 		"resource_group": resourceGroup,
-		"prefix":         "s2s",
+		"prefix":         options.Prefix,
 	}
 
 	output, err := options.RunTestConsistency()
