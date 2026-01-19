@@ -36,7 +36,7 @@ var sharedInfoSvc *cloudinfo.CloudInfoService
 var validRegions = []string{
 	"us-east",
 	"ca-tor",
-	"ca-mon",
+	// "ca-mon", Commenting out this region due to this- https://github.com/terraform-ibm-modules/terraform-ibm-site-to-site-vpn/pull/47#issuecomment-3764373573
 	"br-sao",
 	"eu-de",
 	"eu-gb",
@@ -47,9 +47,12 @@ var validRegions = []string{
 }
 
 func TestMain(m *testing.M) {
-	sharedInfoSvc, _ = cloudinfo.NewCloudInfoServiceFromEnv("TF_VAR_ibmcloud_api_key", cloudinfo.CloudInfoServiceOptions{})
-	// Read the YAML file content
 	var err error
+	sharedInfoSvc, err = cloudinfo.NewCloudInfoServiceFromEnv("TF_VAR_ibmcloud_api_key", cloudinfo.CloudInfoServiceOptions{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Read the YAML file content
 	permanentResources, err = common.LoadMapFromYaml(yamlLocation)
 	if err != nil {
 		log.Fatal(err)
@@ -160,7 +163,7 @@ func TestRunVpcToVpcExample(t *testing.T) {
 		"region_site_b":  region_site_b,
 		"preshared_key":  fmt.Sprintf("ps-key-%s", common.UniqueId(3)),
 		"resource_group": resourceGroup,
-		"prefix":         "s2s",
+		"prefix":         options.Prefix,
 	}
 
 	output, err := options.RunTestConsistency()
