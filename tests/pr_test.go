@@ -36,7 +36,7 @@ var sharedInfoSvc *cloudinfo.CloudInfoService
 var validRegions = []string{
 	"us-east",
 	"ca-tor",
-	"ca-mon",
+	// "ca-mon", Commenting out this region due to this- https://github.com/terraform-ibm-modules/terraform-ibm-site-to-site-vpn/pull/47#issuecomment-3764373573
 	"br-sao",
 	"eu-de",
 	"eu-gb",
