@@ -75,7 +75,7 @@ The `pfs` variable in the IPSec policy does not supports `group_2` and `group_5`
 > **Note:**
 >
 > * When using existing policy IDs (both IKE and IPSec), ensure that the policy resides in the **same region as the VPN Gateway**.
-> * Within a given region, policy names must be **unique**. Two policies with the same name cannot coexist in the same region.
+> * Within a given region, policy names must be **unique**. Two policies with the same name cannot co-exist in the same region.
 
 ### VPN Connections
 
