@@ -53,6 +53,11 @@ For more information refer [here](https://cloud.ibm.com/docs/vpc?topic=vpc-using
 
 ### VPN Policies
 
+**Breaking Change in v4.0.0:**
+
+The `pfs` variable in the IPSec policy no longer supports `group_2` and `group_5`. These were deprecated in Sep 2022 and are fully removed in v4.0.0.
+Any configuration still referencing them will fail. Please update to supported groups (`group_14–group_24`, `group_31`).
+
 *IKE Policy :*
 
 * Internet Key Exchange policy for Phase 1 negotiation.
@@ -69,9 +74,9 @@ For more information refer [here](https://cloud.ibm.com/docs/vpc?topic=vpc-using
 * Use custom policy if default does not meet peer requirements.
 
 > **Note:**
-> - When using existing policy IDs (both IKE and IPSec), ensure that the policy resides in the **same region as the VPN Gateway**.
-> - Within a given region, policy names must be **unique**. Two policies with the same name cannot coexist in the same region.
-
+>
+> * When using existing policy IDs (both IKE and IPSec), ensure that the policy resides in the **same region as the VPN Gateway**.
+> * Within a given region, policy names must be **unique**. Two policies with the same name cannot coexist in the same region.
 
 ### VPN Connections
 
