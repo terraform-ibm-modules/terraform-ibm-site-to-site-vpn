@@ -53,10 +53,6 @@ For more information refer [here](https://cloud.ibm.com/docs/vpc?topic=vpc-using
 
 ### VPN Policies
 
-**Breaking Change in v4.0.0:**
-
-The `pfs` variable in the IPSec policy does not supports `group_2` and `group_5`. These were deprecated in Sep 2022 and no longer supported. Please update to supported groups (`group_14–group_24`, `group_31`). [Refer here](https://cloud.ibm.com/docs/vpc?topic=vpc-creating-ipsec-policy&interface=cli) for more information.
-
 *IKE Policy :*
 
 * Internet Key Exchange policy for Phase 1 negotiation.
@@ -69,7 +65,7 @@ The `pfs` variable in the IPSec policy does not supports `group_2` and `group_5`
 
 * Internet Protocol Security policy for Phase 2 negotiation.
 * Configurable authentication and encryption algorithms.
-* Perfect Forward Secrecy (PFS) support.
+* Perfect Forward Secrecy (PFS) support. Learn more about supported [PFS groups](https://cloud.ibm.com/docs/vpc?topic=vpc-creating-ipsec-policy&interface=cli).
 * Use custom policy if default does not meet peer requirements.
 
 > **Note:**
