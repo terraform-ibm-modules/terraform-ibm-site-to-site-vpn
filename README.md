@@ -65,13 +65,13 @@ For more information refer [here](https://cloud.ibm.com/docs/vpc?topic=vpc-using
 
 * Internet Protocol Security policy for Phase 2 negotiation.
 * Configurable authentication and encryption algorithms.
-* Perfect Forward Secrecy (PFS) support.
+* Perfect Forward Secrecy (PFS) support. Learn more about supported [PFS groups](https://cloud.ibm.com/docs/vpc?topic=vpc-creating-ipsec-policy&interface=cli).
 * Use custom policy if default does not meet peer requirements.
 
 > **Note:**
-> - When using existing policy IDs (both IKE and IPSec), ensure that the policy resides in the **same region as the VPN Gateway**.
-> - Within a given region, policy names must be **unique**. Two policies with the same name cannot coexist in the same region.
-
+>
+> * When using existing policy IDs (both IKE and IPSec), ensure that the policy resides in the **same region as the VPN Gateway**.
+> * Within a given region, policy names must be **unique**. Two policies with the same name cannot co-exist in the same region.
 
 ### VPN Connections
 

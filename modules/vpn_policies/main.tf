@@ -11,7 +11,7 @@ locals {
   ipsec_policy = {
     authentication_algo = ["sha256", "sha384", "sha512", "disabled"]
     encryption_algo     = ["aes128", "aes192", "aes256", "aes128gcm16", "aes192gcm16", "aes256gcm16"]
-    pfs                 = ["disabled", "group_2", "group_5", "group_14"]
+    pfs                 = ["disabled", "group_14", "group_15", "group_16", "group_17", "group_18", "group_19", "group_20", "group_21", "group_22", "group_23", "group_24", "group_31"]
     gcm_variant         = ["aes128gcm16", "aes192gcm16", "aes256gcm16"]
   }
 }

@@ -112,7 +112,7 @@ variable "vpn_connections" {
       for conn in var.vpn_connections :
       conn.ipsec_policy_config != null ? contains(local.ipsec_policy.pfs, conn.ipsec_policy_config.pfs) : (conn.existing_ipsec_policy_id != null)
     ])
-    error_message = "Please provide a valid IPSec Configuration and IPSec Perfect Forward Secrecy (PFS) protocol must be one of: disabled, group_2, group_5, group_14."
+    error_message = "Please provide a valid IPSec Configuration and IPSec Perfect Forward Secrecy (PFS) protocol must be one of: disabled, group_14, group_15, group_16, group_17, group_18, group_19, group_20, group_21, group_22, group_23, group_24, group_31. For more information refer [here](https://cloud.ibm.com/docs/vpc?topic=vpc-creating-ipsec-policy&interface=cli)."
   }
 
   validation {
