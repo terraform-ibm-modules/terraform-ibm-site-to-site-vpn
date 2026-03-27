@@ -12,17 +12,37 @@ This module automates the provisioning of a site-to-site VPN. For more informati
 <!-- The following content is automatically populated by the pre-commit hook -->
 <!-- BEGIN OVERVIEW HOOK -->
 ## Overview
-* [terraform-ibm-site-to-site-vpn](#terraform-ibm-site-to-site-vpn)
-* [Submodules](./modules)
-    * [vpn_policies](./modules/vpn_policies)
-    * [vpn_routing](./modules/vpn_routing)
-* [Examples](./examples)
-:information_source: Ctrl/Cmd+Click or right-click on the Schematics deploy button to open in a new tab
-    * <a href="./examples/multiple-vpn-connections">Multiple Connections VPN Example</a> <a href="https://cloud.ibm.com/schematics/workspaces/create?workspace_name=site-to-site-vpn-multiple-vpn-connections-example&repository=https://github.com/terraform-ibm-modules/terraform-ibm-site-to-site-vpn/tree/main/examples/multiple-vpn-connections"><img src="https://img.shields.io/badge/Deploy%20with IBM%20Cloud%20Schematics-0f62fe?logo=ibm&logoColor=white&labelColor=0f62fe" alt="Deploy with IBM Cloud Schematics" style="height: 16px; vertical-align: text-bottom; margin-left: 5px;"></a>
-    * <a href="./examples/single-site">Single Site VPN Example</a> <a href="https://cloud.ibm.com/schematics/workspaces/create?workspace_name=site-to-site-vpn-single-site-example&repository=https://github.com/terraform-ibm-modules/terraform-ibm-site-to-site-vpn/tree/main/examples/single-site"><img src="https://img.shields.io/badge/Deploy%20with IBM%20Cloud%20Schematics-0f62fe?logo=ibm&logoColor=white&labelColor=0f62fe" alt="Deploy with IBM Cloud Schematics" style="height: 16px; vertical-align: text-bottom; margin-left: 5px;"></a>
-    * <a href="./examples/vpc-to-vpc">VPC to VPC Example</a> <a href="https://cloud.ibm.com/schematics/workspaces/create?workspace_name=site-to-site-vpn-vpc-to-vpc-example&repository=https://github.com/terraform-ibm-modules/terraform-ibm-site-to-site-vpn/tree/main/examples/vpc-to-vpc"><img src="https://img.shields.io/badge/Deploy%20with IBM%20Cloud%20Schematics-0f62fe?logo=ibm&logoColor=white&labelColor=0f62fe" alt="Deploy with IBM Cloud Schematics" style="height: 16px; vertical-align: text-bottom; margin-left: 5px;"></a>
-    * <a href="./examples/vpc-to-vpc/existing-gateway-connection">Adding Connection to Existing VPN Gateway</a> <a href="https://cloud.ibm.com/schematics/workspaces/create?workspace_name=site-to-site-vpn-existing-gateway-connection-example&repository=https://github.com/terraform-ibm-modules/terraform-ibm-site-to-site-vpn/tree/main/examples/existing-gateway-connection"><img src="https://img.shields.io/badge/Deploy%20with IBM%20Cloud%20Schematics-0f62fe?logo=ibm&logoColor=white&labelColor=0f62fe" alt="Deploy with IBM Cloud Schematics" style="height: 16px; vertical-align: text-bottom; margin-left: 5px;"></a>
-* [Contributing](#contributing)
+<ul>
+  <li><a href="#terraform-ibm-site-to-site-vpn">terraform-ibm-site-to-site-vpn</a></li>
+  <li><a href="./modules">Submodules</a>
+    <ul>
+      <li><a href="./modules/vpn_policies">vpn_policies</a></li>
+      <li><a href="./modules/vpn_routing">vpn_routing</a></li>
+    </ul>
+  </li>
+  <li><a href="./examples">Examples</a>
+    <ul>
+      <li>
+        <a href="./examples/multiple-vpn-connections">Multiple Connections VPN Example</a>
+        <a href="https://cloud.ibm.com/schematics/workspaces/create?workspace_name=site-to-site-vpn-multiple-vpn-connections-example&repository=https://github.com/terraform-ibm-modules/terraform-ibm-site-to-site-vpn/tree/main/examples/multiple-vpn-connections"><img src="https://img.shields.io/badge/Deploy%20with%20IBM%20Cloud%20Schematics-0f62fe?style=flat&logo=ibm&logoColor=white&labelColor=0f62fe" alt="Deploy with IBM Cloud Schematics" style="height: 16px; vertical-align: text-bottom; margin-left: 5px;"></a>
+      </li>
+      <li>
+        <a href="./examples/single-site">Single Site VPN Example</a>
+        <a href="https://cloud.ibm.com/schematics/workspaces/create?workspace_name=site-to-site-vpn-single-site-example&repository=https://github.com/terraform-ibm-modules/terraform-ibm-site-to-site-vpn/tree/main/examples/single-site"><img src="https://img.shields.io/badge/Deploy%20with%20IBM%20Cloud%20Schematics-0f62fe?style=flat&logo=ibm&logoColor=white&labelColor=0f62fe" alt="Deploy with IBM Cloud Schematics" style="height: 16px; vertical-align: text-bottom; margin-left: 5px;"></a>
+      </li>
+      <li>
+        <a href="./examples/vpc-to-vpc">VPC to VPC Example</a>
+        <a href="https://cloud.ibm.com/schematics/workspaces/create?workspace_name=site-to-site-vpn-vpc-to-vpc-example&repository=https://github.com/terraform-ibm-modules/terraform-ibm-site-to-site-vpn/tree/main/examples/vpc-to-vpc"><img src="https://img.shields.io/badge/Deploy%20with%20IBM%20Cloud%20Schematics-0f62fe?style=flat&logo=ibm&logoColor=white&labelColor=0f62fe" alt="Deploy with IBM Cloud Schematics" style="height: 16px; vertical-align: text-bottom; margin-left: 5px;"></a>
+      </li>
+      <li>
+        <a href="./examples/vpc-to-vpc/existing-gateway-connection">Adding Connection to Existing VPN Gateway</a>
+        <a href="https://cloud.ibm.com/schematics/workspaces/create?workspace_name=site-to-site-vpn-existing-gateway-connection-example&repository=https://github.com/terraform-ibm-modules/terraform-ibm-site-to-site-vpn/tree/main/examples/existing-gateway-connection"><img src="https://img.shields.io/badge/Deploy%20with%20IBM%20Cloud%20Schematics-0f62fe?style=flat&logo=ibm&logoColor=white&labelColor=0f62fe" alt="Deploy with IBM Cloud Schematics" style="height: 16px; vertical-align: text-bottom; margin-left: 5px;"></a>
+      </li>
+    </ul>
+    ℹ️ Ctrl/Cmd+Click or right-click on the Schematics deploy button to open in a new tab.
+  </li>
+  <li><a href="#contributing">Contributing</a></li>
+</ul>
 <!-- END OVERVIEW HOOK -->
 
 
@@ -264,7 +284,7 @@ You need the following permissions to run this module.
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
-| <a name="requirement_ibm"></a> [ibm](#requirement\_ibm) | >= 1.80.3, < 2.0.0 |
+| <a name="requirement_ibm"></a> [ibm](#requirement\_ibm) | >= 1.88.0, < 2.0.0 |
 | <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.9.1, < 1.0.0 |
 
 ### Modules
