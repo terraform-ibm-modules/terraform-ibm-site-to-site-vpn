@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -16,15 +17,15 @@ func TestRunMultipleVpnConnectionsExample(t *testing.T) {
 
 	// Provision Resources to be used by this example
 	var region = validRegions[common.CryptoIntn(len(validRegions))]
-	prefixExistingRes := fmt.Sprintf("ex-%s", strings.ToLower(random.UniqueId()))
+	prefixExistingRes := fmt.Sprintf("ex-%s", strings.ToLower(random.UniqueID()))
 	existingTerraformOptions := setupRemoteVPNGateway(t, region, prefixExistingRes, true)
 
 	// Test Multiple connections using existing VPC and VPN Gateway details
 	options := setupOptions(t, "mconn", multipleConnExampleDir)
-	options.TerraformVars["remote_gateway_ip"] = terraform.Output(t, existingTerraformOptions, "vpn_gateway_public_ip")
-	options.TerraformVars["remote_cidr"] = terraform.Output(t, existingTerraformOptions, "remote_cidr")
-	options.TerraformVars["remote_gateway_ip_2"] = terraform.Output(t, existingTerraformOptions, "vpn_gateway_public_ip_2")
-	options.TerraformVars["remote_cidr_2"] = terraform.Output(t, existingTerraformOptions, "remote_cidr")
+	options.TerraformVars["remote_gateway_ip"] = terraform.OutputContext(t, context.Background(), existingTerraformOptions, "vpn_gateway_public_ip")
+	options.TerraformVars["remote_cidr"] = terraform.OutputContext(t, context.Background(), existingTerraformOptions, "remote_cidr")
+	options.TerraformVars["remote_gateway_ip_2"] = terraform.OutputContext(t, context.Background(), existingTerraformOptions, "vpn_gateway_public_ip_2")
+	options.TerraformVars["remote_cidr_2"] = terraform.OutputContext(t, context.Background(), existingTerraformOptions, "remote_cidr")
 
 	// Run consistency checks
 	output, err := options.RunTestConsistency()

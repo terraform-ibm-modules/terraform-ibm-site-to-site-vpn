@@ -3,6 +3,7 @@
 package test
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -84,7 +85,7 @@ func setupOptions(t *testing.T, prefix string, exampleDir string) *testhelper.Te
 // Provision Remote VPN Gateway
 func setupRemoteVPNGateway(t *testing.T, region string, prefix string, isSingleSite bool) *terraform.Options {
 	realTerraformDir := "./resources"
-	tempTerraformDir, _ := files.CopyTerraformFolderToTemp(realTerraformDir, fmt.Sprintf(prefix+"-%s", strings.ToLower(random.UniqueId())))
+	tempTerraformDir, _ := files.CopyTerraformFolderToTemp(realTerraformDir, fmt.Sprintf(prefix+"-%s", strings.ToLower(random.UniqueID())))
 
 	checkVariable := "TF_VAR_ibmcloud_api_key"
 	val, present := os.LookupEnv(checkVariable)
@@ -102,8 +103,8 @@ func setupRemoteVPNGateway(t *testing.T, region string, prefix string, isSingleS
 		Upgrade: true,
 	})
 
-	terraform.WorkspaceSelectOrNew(t, existingTerraformOptions, prefix)
-	_, existErr := terraform.InitAndApplyE(t, existingTerraformOptions)
+	terraform.WorkspaceSelectOrNewContext(t, context.Background(), existingTerraformOptions, prefix)
+	_, existErr := terraform.InitAndApplyContextE(t, context.Background(), existingTerraformOptions)
 	require.NoError(t, existErr, "Init and Apply of temp resources (VPC and VPN Gateway) failed")
 
 	return existingTerraformOptions
@@ -118,8 +119,8 @@ func cleanupResources(t *testing.T, terraformOptions *terraform.Options, prefix 
 		fmt.Println("Terratest failed. Debug the test and delete resources manually.")
 	} else {
 		logger.Log(t, "START: Destroy (existing resources)")
-		terraform.Destroy(t, terraformOptions)
-		terraform.WorkspaceDelete(t, terraformOptions, prefix)
+		terraform.DestroyContext(t, context.Background(), terraformOptions)
+		terraform.WorkspaceDeleteContext(t, context.Background(), terraformOptions, prefix)
 		logger.Log(t, "END: Destroy (existing resources)")
 	}
 }
@@ -128,13 +129,13 @@ func TestRunSingleSiteExample(t *testing.T) {
 	t.Parallel()
 
 	var region = validRegions[common.CryptoIntn(len(validRegions))]
-	prefixExistingRes := fmt.Sprintf("ex-%s", strings.ToLower(random.UniqueId()))
+	prefixExistingRes := fmt.Sprintf("ex-%s", strings.ToLower(random.UniqueID()))
 	existingTerraformOptions := setupRemoteVPNGateway(t, region, prefixExistingRes, false)
 
 	// Test Single Site using existing VPC and VPN Gateway details
 	options := setupOptions(t, "site1", singleSiteExampleDir)
-	options.TerraformVars["remote_gateway_ip"] = terraform.Output(t, existingTerraformOptions, "vpn_gateway_public_ip")
-	options.TerraformVars["remote_cidr"] = terraform.Output(t, existingTerraformOptions, "remote_cidr")
+	options.TerraformVars["remote_gateway_ip"] = terraform.OutputContext(t, context.Background(), existingTerraformOptions, "vpn_gateway_public_ip")
+	options.TerraformVars["remote_cidr"] = terraform.OutputContext(t, context.Background(), existingTerraformOptions, "remote_cidr")
 	output, err := options.RunTestConsistency()
 	assert.Nil(t, err, "This should not have errored")
 	assert.NotNil(t, output, "Expected some output")
