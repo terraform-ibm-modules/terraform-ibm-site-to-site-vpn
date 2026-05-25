@@ -190,20 +190,11 @@ resource "ibm_is_security_group_rule" "sg_inbound_site_a" {
   group     = ibm_is_security_group.sg_site_a.id
   direction = "inbound"
   remote    = each.value.remote
-
-  dynamic "tcp" {
-    for_each = each.value.protocol == "tcp" ? [1] : []
-    content {
-      port_min = each.value.port_min
-      port_max = each.value.port_max
-    }
-  }
-  dynamic "icmp" {
-    for_each = each.value.protocol == "icmp" ? [1] : []
-    content {
-      type = each.value.type
-    }
-  }
+  protocol  = each.value.protocol
+  port_min  = lookup(each.value, "port_min", null)
+  port_max  = lookup(each.value, "port_max", null)
+  type      = lookup(each.value, "type", null)
+  code      = lookup(each.value, "code", null)
 }
 
 resource "ibm_is_security_group_rule" "sg_outbound_site_a" {
@@ -227,20 +218,11 @@ resource "ibm_is_security_group_rule" "sg_inbound_site_b" {
   group     = ibm_is_security_group.sg_site_b.id
   direction = "inbound"
   remote    = each.value.remote
-
-  dynamic "tcp" {
-    for_each = each.value.protocol == "tcp" ? [1] : []
-    content {
-      port_min = each.value.port_min
-      port_max = each.value.port_max
-    }
-  }
-  dynamic "icmp" {
-    for_each = each.value.protocol == "icmp" ? [1] : []
-    content {
-      type = each.value.type
-    }
-  }
+  protocol  = each.value.protocol
+  port_min  = lookup(each.value, "port_min", null)
+  port_max  = lookup(each.value, "port_max", null)
+  type      = lookup(each.value, "type", null)
+  code      = lookup(each.value, "code", null)
 }
 
 resource "ibm_is_security_group_rule" "sg_outbound_site_b" {
