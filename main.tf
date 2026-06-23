@@ -47,7 +47,7 @@ resource "ibm_is_vpn_gateway" "vpn_gateway" {
   resource_group = var.resource_group_id
   mode           = var.vpn_gateway_mode
   subnet         = var.vpn_gateway_subnet_id
-  tags           = var.tags
+  tags           = var.resource_tags
   timeouts {
     create = "1h"
     delete = "1h"
@@ -176,5 +176,5 @@ module "vpn_routes" {
   route_transit_gateway_ingress    = var.route_transit_gateway_ingress
   route_vpc_zone_ingress           = var.route_vpc_zone_ingress
   route_internet_ingress           = var.route_internet_ingress
-  tags                             = var.tags
+  tags                             = var.resource_tags
 }

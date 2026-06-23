@@ -34,7 +34,7 @@ resource "ibm_is_vpc_routing_table" "vpn_routing_table" {
   name                             = var.routing_table_name
   vpc                              = var.vpc_id
   access_tags                      = var.access_tags
-  tags                             = var.tags
+  tags                             = var.resource_tags
   advertise_routes_to              = var.advertise_routes_to
   accept_routes_from_resource_type = var.accept_routes_from_resource_type
   route_direct_link_ingress        = var.route_direct_link_ingress
