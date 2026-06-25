@@ -176,5 +176,5 @@ module "vpn_routes" {
   route_transit_gateway_ingress    = var.route_transit_gateway_ingress
   route_vpc_zone_ingress           = var.route_vpc_zone_ingress
   route_internet_ingress           = var.route_internet_ingress
-  tags                             = var.resource_tags
+  resource_tags                    = var.resource_tags
 }
