@@ -29,7 +29,15 @@ locals {
 ########################################
 # Route Table Creation
 ########################################
+
+# Check whether access tags are valid and exist in the account
+data "ibm_iam_access_tag" "access_tags" {
+  for_each = toset(var.access_tags)
+  name     = each.value
+}
+
 resource "ibm_is_vpc_routing_table" "vpn_routing_table" {
+  depends_on                       = [data.ibm_iam_access_tag.access_tags] # Force dependency on data source validation to ensure access_tags exist and are valid before use.
   count                            = var.existing_route_table_id == null && var.create_route_table ? 1 : 0
   name                             = var.routing_table_name
   vpc                              = var.vpc_id
