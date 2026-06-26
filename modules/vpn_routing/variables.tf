@@ -4,7 +4,7 @@
 
 variable "access_tags" {
   type        = list(string)
-  description = "A list of access tags to apply to the resources created by the module. For more information, see https://cloud.ibm.com/docs/account?topic=account-access-tags-tutorial."
+  description = "Add access management tags to the Site-to-site VPN instance to control access. [Learn more](https://cloud.ibm.com/docs/account?topic=account-tag&interface=ui#create-access-console)."
   default     = []
 
   validation {
@@ -15,8 +15,8 @@ variable "access_tags" {
   }
 }
 
-variable "tags" {
-  description = "List of Tags for the resource created."
+variable "resource_tags" {
+  description = "Add user resource tags to the Site-to-site VPN instance to organize, track, and manage costs. [Learn more](https://cloud.ibm.com/docs/account?topic=account-tag&interface=ui#tag-types)."
   type        = list(string)
   default     = null
 }

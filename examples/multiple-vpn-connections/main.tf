@@ -164,7 +164,7 @@ module "vpn_gateway_with_multiple_connections" {
   source                = "../.."
   resource_group_id     = module.resource_group.resource_group_id
   create_vpn_gateway    = true
-  tags                  = var.tags
+  resource_tags         = var.tags
   vpn_gateway_name      = local.vpn_gw_name
   vpn_gateway_subnet_id = local.subnet_id
   vpn_gateway_mode      = "policy" # Policy Based VPN
