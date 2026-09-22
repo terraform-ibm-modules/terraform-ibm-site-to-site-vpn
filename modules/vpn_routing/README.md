@@ -24,7 +24,7 @@ module "vpn_routing_table" {
   routing_table_name            = "vpn-base-table"
   vpc_id                        = "vpc-abc123"
   access_tags                   = ["env:shared"]
-  tags                          = ["test"]
+  resource_tags                 = ["test"]
   advertise_routes_to           = ["direct_link", "transit_gateway"]
   accept_routes_from_resource_type = ["vpn_gateway"]
   route_direct_link_ingress     = true
