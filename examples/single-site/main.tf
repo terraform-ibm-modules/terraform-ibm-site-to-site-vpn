@@ -22,7 +22,7 @@ locals {
 resource "ibm_is_vpc" "vpc" {
   name           = local.vpc_name
   resource_group = module.resource_group.resource_group_id
-  tags           = var.resource_tags
+  tags           = var.tags
 }
 
 resource "ibm_is_subnet" "subnet_zone_1" {
@@ -107,7 +107,7 @@ locals {
 module "vpn_gateway_single_site" {
   source            = "../.."
   resource_group_id = module.resource_group.resource_group_id
-  resource_tags     = var.resource_tags
+  resource_tags     = var.tags
 
   # VPN Gateway
   create_vpn_gateway    = true
