@@ -187,7 +187,7 @@ module "site_to_site_vpn" {
   version                        = "X.X.X" # Replace "X.X.X" with a release version to lock into a specific release
   resource_group_id              = "65xxxxxxxxxxxxxxxa3fd"
   create_vpn_gateway             = true
-  tags                           = var.tags
+  resource_tags                  = ["test"]
   vpn_gateway_name               = "xxxxx" # Name of the VPN Gateway
   vpn_gateway_subnet_id          = "s..12" # Subnet id where VPN Gateway will be created
   vpn_gateway_mode               = "route" # Can be route or policy
