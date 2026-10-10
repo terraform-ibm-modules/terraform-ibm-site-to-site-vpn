@@ -282,7 +282,7 @@ You need the following permissions to run this module.
 ### Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
 | <a name="requirement_ibm"></a> [ibm](#requirement\_ibm) | >= 1.80.3, < 3.0.0 |
 | <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.9.1, < 1.0.0 |
@@ -290,14 +290,14 @@ You need the following permissions to run this module.
 ### Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_vpn_policies"></a> [vpn\_policies](#module\_vpn\_policies) | ./modules/vpn_policies | n/a |
 | <a name="module_vpn_routes"></a> [vpn\_routes](#module\_vpn\_routes) | ./modules/vpn_routing | n/a |
 
 ### Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [ibm_is_vpn_gateway.vpn_gateway](https://registry.terraform.io/providers/IBM-Cloud/ibm/latest/docs/resources/is_vpn_gateway) | resource |
 | [ibm_is_vpn_gateway_connection.vpn_site_to_site_connection](https://registry.terraform.io/providers/IBM-Cloud/ibm/latest/docs/resources/is_vpn_gateway_connection) | resource |
 | [time_sleep.wait_for_gateway_creation](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) | resource |
@@ -305,7 +305,7 @@ You need the following permissions to run this module.
 ### Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_accept_routes_from_resource_type"></a> [accept\_routes\_from\_resource\_type](#input\_accept\_routes\_from\_resource\_type) | List of resource types allowed to create routes in this table. | `list(string)` | `[]` | no |
 | <a name="input_advertise_routes_to"></a> [advertise\_routes\_to](#input\_advertise\_routes\_to) | Ingress sources to which routes should be advertised. | `list(string)` | `[]` | no |
 | <a name="input_create_route_table"></a> [create\_route\_table](#input\_create\_route\_table) | Whether to create a new route table. | `bool` | `false` | no |
@@ -332,7 +332,7 @@ You need the following permissions to run this module.
 ### Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_vpn_connection_policies"></a> [vpn\_connection\_policies](#output\_vpn\_connection\_policies) | IKE and IPSec policy details. |
 | <a name="output_vpn_gateway_connection_ids"></a> [vpn\_gateway\_connection\_ids](#output\_vpn\_gateway\_connection\_ids) | Map of VPN gateway connection IDs, keyed by connection name. |
 | <a name="output_vpn_gateway_connection_modes"></a> [vpn\_gateway\_connection\_modes](#output\_vpn\_gateway\_connection\_modes) | Map of VPN gateway connection modes: either 'policy' or 'route'. |
